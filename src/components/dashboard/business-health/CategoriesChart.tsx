@@ -11,7 +11,7 @@ const data = [
 
 export default function CategoriesChart() {
     return (
-        <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 shadow-sm h-full flex flex-col">
+        <div className="bg-card border border-border rounded-xl p-5 shadow-sm h-full flex flex-col">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-medium text-foreground">Top Categories</h3>
 

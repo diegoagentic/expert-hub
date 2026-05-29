@@ -45,7 +45,7 @@ const inventory = [
 
 export default function InventoryHealthList() {
     return (
-        <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden shadow-sm mb-6">
+        <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm mb-6">
             <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <span className="text-lg font-semibold text-foreground">Inventory Health</span>
 

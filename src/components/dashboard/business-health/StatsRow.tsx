@@ -64,7 +64,7 @@ export default function StatsRow({ activeStatId, onStatClick }: StatsRowProps) {
                         key={stat.id}
                         onClick={() => onStatClick?.(stat.id)}
                         className={`
-                            bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 shadow-sm transition-all cursor-pointer
+                            bg-card border border-border rounded-xl p-5 shadow-sm transition-all cursor-pointer
                             ${isActive ? 'rounded-b-none border-b-zinc-800 dark:border-b-zinc-800 z-20 relative ring-0' : 'hover:border-zinc-300 dark:hover:border-zinc-600'}
                         `}
                     >
@@ -92,9 +92,9 @@ export default function StatsRow({ activeStatId, onStatClick }: StatsRowProps) {
                         {isActive && (
                             <>
                                 {/* Hides card bottom border */}
-                                <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-white dark:bg-zinc-800 z-30" />
+                                <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-card z-30" />
                                 {/* Bridges the gap to the panel below */}
-                                <div className="absolute -bottom-6 left-[-1px] right-[-1px] h-6 bg-white dark:bg-zinc-800 border-l border-r border-zinc-200 dark:border-zinc-700 z-20" />
+                                <div className="absolute -bottom-6 left-[-1px] right-[-1px] h-6 bg-card border-l border-r border-border z-20" />
                             </>
                         )}
                     </div>

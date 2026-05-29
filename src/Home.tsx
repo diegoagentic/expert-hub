@@ -66,17 +66,17 @@ export default function Home() {
                 </div>
 
                 {/* Footer Banner */}
-                <div className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-4 flex items-center justify-between shadow-sm dark:shadow-none">
+                <div className="w-full bg-card border border-border rounded-xl p-4 flex items-center justify-between shadow-sm dark:shadow-none">
                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border border-zinc-200 dark:border-zinc-700">
+                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center border border-border">
                             <div className="w-5 h-5 border-2 border-zinc-400 dark:border-zinc-500 rounded-sm"></div>
                         </div>
                         <div>
-                            <p className="font-bold text-zinc-900 dark:text-white text-sm">4.2 hours saved today</p>
-                            <p className="text-xs text-zinc-500">Through automated workflows and AI recommendations</p>
+                            <p className="font-bold text-foreground text-sm">4.2 hours saved today</p>
+                            <p className="text-xs text-muted-foreground">Through automated workflows and AI recommendations</p>
                         </div>
                     </div>
-                    <button className="flex items-center gap-1 text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                    <button className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
                         View automation report
                         <span>→</span>
                     </button>

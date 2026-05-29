@@ -14,13 +14,13 @@ interface StatCardProps {
 
 export function StatCard({ title, value, icon: Icon, trend, trendLabel, trendPositive, statusColor, actionIcon: ActionIcon }: StatCardProps) {
     return (
-        <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 flex flex-col justify-between h-full relative group hover:border-zinc-300 dark:hover:border-zinc-600 transition-all shadow-sm dark:shadow-none">
+        <div className="bg-card border border-border rounded-xl p-5 flex flex-col justify-between h-full relative group hover:border-zinc-300 dark:hover:border-zinc-600 transition-all shadow-sm dark:shadow-none">
             <div className="flex justify-between items-start mb-4">
                 <div className="flex flex-col">
-                    <span className="text-4xl font-bold text-zinc-900 dark:text-white mb-1 font-brand">{value}</span>
-                    <span className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">{title}</span>
+                    <span className="text-4xl font-bold text-foreground mb-1 font-brand">{value}</span>
+                    <span className="text-sm text-muted-foreground font-medium">{title}</span>
                 </div>
-                <div className={cn("p-2 rounded-full bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-700", statusColor)}>
+                <div className={cn("p-2 rounded-full bg-zinc-100 dark:bg-zinc-900/50 border border-border", statusColor)}>
                     <Icon className="w-5 h-5" />
                 </div>
             </div>
@@ -32,7 +32,7 @@ export function StatCard({ title, value, icon: Icon, trend, trendLabel, trendPos
                             {trendPositive ? '↗' : '↘'} {trend}
                         </span>
                     )}
-                    {trendLabel && <span className="text-zinc-500 ml-1.5">{trendLabel}</span>}
+                    {trendLabel && <span className="text-muted-foreground ml-1.5">{trendLabel}</span>}
                 </div>
             )}
 

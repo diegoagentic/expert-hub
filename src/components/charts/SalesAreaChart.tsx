@@ -12,13 +12,13 @@ const data = [
 
 export function SalesAreaChart() {
     return (
-        <div className="h-[400px] w-full bg-white dark:bg-zinc-800 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col">
+        <div className="h-[400px] w-full bg-card rounded-xl p-4 border border-border shadow-sm flex flex-col">
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Sales Performance</h3>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">Revenue trends over the last 7 months</p>
+                    <h3 className="text-lg font-semibold text-foreground">Sales Performance</h3>
+                    <p className="text-sm text-muted-foreground">Revenue trends over the last 7 months</p>
                 </div>
-                <select className="bg-zinc-100 dark:bg-zinc-800 border-none text-xs rounded-md px-2 py-1 text-zinc-600 dark:text-zinc-300 outline-none">
+                <select className="bg-muted border-none text-xs rounded-md px-2 py-1 text-muted-foreground dark:text-zinc-300 outline-none">
                     <option>Last 7 Months</option>
                     <option>Last 30 Days</option>
                     <option>Year to Date</option>

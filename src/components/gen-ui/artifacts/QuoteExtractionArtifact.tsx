@@ -163,18 +163,18 @@ export default function QuoteExtractionArtifact({ fileName, onComplete }: QuoteE
                         {index !== steps.length - 1 && (
                             <div className={clsx(
                                 "absolute left-[11px] top-6 w-0.5 h-full -z-10 transition-colors duration-500",
-                                step.status === 'complete' ? "bg-indigo-200 dark:bg-indigo-700/50" : "bg-zinc-100 dark:bg-zinc-800"
+                                step.status === 'complete' ? "bg-indigo-200 dark:bg-indigo-700/50" : "bg-muted"
                             )}></div>
                         )}
 
                         <div className="flex items-start gap-4">
                             <div className={clsx(
-                                "w-6 h-6 rounded-full flex items-center justify-center shrink-0 border-2 transition-all duration-300 z-10 bg-white dark:bg-zinc-800",
+                                "w-6 h-6 rounded-full flex items-center justify-center shrink-0 border-2 transition-all duration-300 z-10 bg-card",
                                 step.status === 'complete'
                                     ? "border-green-500 text-green-500 bg-green-50 dark:bg-green-900/10"
                                     : step.status === 'active'
                                         ? "border-indigo-500 text-indigo-500 animate-pulse bg-indigo-50 dark:bg-indigo-900/10"
-                                        : "border-zinc-200 dark:border-zinc-700 text-zinc-300"
+                                        : "border-border text-zinc-300"
                             )}>
                                 {step.status === 'complete' ? (
                                     <CheckCircleIcon className="w-4 h-4" />

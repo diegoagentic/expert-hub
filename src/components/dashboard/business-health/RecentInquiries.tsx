@@ -46,7 +46,7 @@ const inquiries = [
 
 export default function RecentInquiries() {
     return (
-        <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-5 shadow-sm h-full">
+        <div className="bg-card border border-border rounded-xl p-5 shadow-sm h-full">
             <div className="space-y-4">
                 <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-semibold text-foreground">Recent Inquiries</h3>
@@ -74,7 +74,7 @@ export default function RecentInquiries() {
                             <div className="absolute -left-[5px] top-0 w-2.5 h-2.5 rounded-full bg-brand-500 ring-4 ring-background"></div>
 
                             <div className="flex items-start gap-3">
-                                <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-medium text-zinc-400">
+                                <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-medium text-muted-foreground">
                                     {inquiry.avatar}
                                 </div>
                                 <div className="flex-1">
@@ -102,7 +102,7 @@ export default function RecentInquiries() {
 
                                     {inquiry.replies.map((reply, idx) => (
                                         <div key={idx} className="ml-4 mt-2 flex items-start gap-3">
-                                            <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center text-[10px] font-medium text-zinc-400 mt-1">
+                                            <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center text-[10px] font-medium text-muted-foreground mt-1">
                                                 {reply.avatar}
                                             </div>
                                             <div className="flex-1">

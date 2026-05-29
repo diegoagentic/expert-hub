@@ -14,9 +14,9 @@ export function PerformanceMetrics() {
     const [viewMode, setViewMode] = useState<'percentage' | 'hours'>('percentage');
 
     return (
-        <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 h-full flex flex-col shadow-sm dark:shadow-none">
+        <div className="bg-card border border-border rounded-xl p-6 h-full flex flex-col shadow-sm dark:shadow-none">
             <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">This Month's Performance</h3>
+                <h3 className="text-lg font-semibold text-foreground">This Month's Performance</h3>
                 <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white dark:text-zinc-950 bg-lime-500 dark:bg-lime-400 rounded-md hover:bg-lime-600 dark:hover:bg-lime-500 transition-colors">
                     <PencilSquareIcon className="w-4 h-4" />
                     Edit
@@ -27,13 +27,13 @@ export function PerformanceMetrics() {
                 <div className="p-1 bg-zinc-100 dark:bg-zinc-900 rounded-lg flex gap-1">
                     <button
                         onClick={() => setViewMode('percentage')}
-                        className={cn("px-4 py-1.5 text-xs font-medium rounded-md transition-all", viewMode === 'percentage' ? "bg-white dark:bg-lime-400 text-zinc-900 dark:text-zinc-950 shadow-sm" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white")}
+                        className={cn("px-4 py-1.5 text-xs font-medium rounded-md transition-all", viewMode === 'percentage' ? "bg-white dark:bg-lime-400 text-zinc-900 dark:text-zinc-950 shadow-sm" : "text-muted-foreground hover:text-foreground")}
                     >
                         Percentage
                     </button>
                     <button
                         onClick={() => setViewMode('hours')}
-                        className={cn("px-4 py-1.5 text-xs font-medium rounded-md transition-all", viewMode === 'hours' ? "bg-white dark:bg-lime-400 text-zinc-900 dark:text-zinc-950 shadow-sm" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white")}
+                        className={cn("px-4 py-1.5 text-xs font-medium rounded-md transition-all", viewMode === 'hours' ? "bg-white dark:bg-lime-400 text-zinc-900 dark:text-zinc-950 shadow-sm" : "text-muted-foreground hover:text-foreground")}
                     >
                         Hours Saved
                     </button>
@@ -44,8 +44,8 @@ export function PerformanceMetrics() {
                 {metrics.map((metric, index) => (
                     <div key={index}>
                         <div className="flex justify-between items-end mb-2">
-                            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{metric.label}</span>
-                            <span className="text-lg font-bold text-zinc-900 dark:text-white">{metric.value}%</span>
+                            <span className="text-sm font-medium text-muted-foreground">{metric.label}</span>
+                            <span className="text-lg font-bold text-foreground">{metric.value}%</span>
                         </div>
                         <div className="relative h-2 bg-zinc-200 dark:bg-zinc-700/50 rounded-full overflow-hidden">
                             <div
@@ -54,7 +54,7 @@ export function PerformanceMetrics() {
                             />
                         </div>
                         <div className="flex justify-end mt-1.5">
-                            <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wide">{metric.target}</span>
+                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{metric.target}</span>
                         </div>
                     </div>
                 ))}
