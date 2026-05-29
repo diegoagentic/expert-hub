@@ -230,7 +230,7 @@ export default function Inventory() {
                                     <p className="text-xs text-muted-foreground mt-1">{kpi.label}</p>
                                 </div>
                                 <div className={cn("p-2 rounded-full bg-secondary border border-border", kpi.color)}>
-                                    <kpi.icon className="w-5 h-5 text-zinc-500 dark:text-brand-400" />
+                                    <kpi.icon className="w-5 h-5 text-muted-foreground dark:text-brand-400" />
                                 </div>
                             </div>
                         ))}
@@ -241,7 +241,7 @@ export default function Inventory() {
                 <div className="flex flex-col gap-4">
                     {/* Row 1: Reporting & Add (Right Aligned) */}
                     <div className="flex justify-end gap-3">
-                        <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground bg-secondary border border-border rounded-lg hover:bg-brand-300 hover:text-zinc-900 hover:border-brand-300 dark:hover:bg-brand-400 dark:hover:text-zinc-900 transition-colors">
+                        <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground bg-secondary border border-border rounded-lg hover:bg-brand-300 hover:text-zinc-900 hover:border-brand-300 dark:hover:bg-brand-400 dark:hover:text-primary-foreground transition-colors">
                             <DocumentTextIcon className="w-4 h-4" />
                             Generate Report
                         </button>
@@ -331,7 +331,7 @@ export default function Inventory() {
                                 </button>
                             </div>
 
-                            <button className="flex items-center gap-2 px-3 py-2 text-muted-foreground bg-secondary border border-border rounded-lg hover:bg-brand-300 hover:text-zinc-900 hover:border-brand-300 dark:hover:bg-brand-400 dark:hover:text-zinc-900 transition-colors">
+                            <button className="flex items-center gap-2 px-3 py-2 text-muted-foreground bg-secondary border border-border rounded-lg hover:bg-brand-300 hover:text-zinc-900 hover:border-brand-300 dark:hover:bg-brand-400 dark:hover:text-primary-foreground transition-colors">
                                 <FunnelIcon className="w-4 h-4" />
                                 Sort
                             </button>
@@ -459,7 +459,7 @@ export default function Inventory() {
                                                 <h3 className="font-bold text-lg text-foreground truncate">{item.name}</h3>
                                                 <p className="text-xs text-muted-foreground">{item.description}</p>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs font-mono text-zinc-500 dark:text-brand-400">{item.sku}</span>
+                                                    <span className="text-xs font-mono text-muted-foreground dark:text-brand-400">{item.sku}</span>
                                                     <span className="w-1 h-1 bg-zinc-600 rounded-full"></span>
                                                     <span className="text-xs border border-border px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{item.category}</span>
                                                 </div>

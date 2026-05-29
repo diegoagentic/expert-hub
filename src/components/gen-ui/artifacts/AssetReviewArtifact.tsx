@@ -355,9 +355,9 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
     const totalIssues = headerIssues.length + ruleIssues.length + stats.attention;
 
     return (
-        <div className="flex flex-col h-full bg-zinc-50 dark:bg-zinc-800 overflow-hidden">
+        <div className="flex flex-col h-full bg-muted dark:bg-zinc-800 overflow-hidden">
             {/* Header / Status Bar */}
-            <div className="shrink-0 bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-800 p-4 flex items-center justify-between">
+            <div className="shrink-0 bg-card border-b border-border p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
                         <SparklesIcon className="w-5 h-5 text-primary" />
@@ -365,7 +365,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                     <div>
                         <h2 className="text-lg font-bold font-brand text-foreground flex items-center gap-2">
                             A.I. Asset Processing
-                            <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-full text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Beta</span>
+                            <span className="px-2 py-0.5 bg-muted border border-border rounded-full text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Beta</span>
                         </h2>
                         <p className="text-xs text-muted-foreground">
                             {totalIssues > 0
@@ -377,24 +377,24 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
 
                 <div className="flex items-center gap-3">
                     {/* Optional Actions Menu */}
-                    <div className="flex items-center border-r border-zinc-200 dark:border-zinc-800 pr-3 gap-2">
+                    <div className="flex items-center border-r border-border pr-3 gap-2">
                         <button
                             onClick={() => setIsWarrantyMenuOpen(true)}
-                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted rounded-lg transition-colors"
                         >
                             <ShieldCheckIcon className="w-4 h-4" />
                             Warranties
                         </button>
                         <button
                             onClick={() => setPricingStep('discounts')} // Re-using state for now to show discount widget
-                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted rounded-lg transition-colors"
                         >
                             <TagIcon className="w-4 h-4" />
                             Discounts
                         </button>
                     </div>
 
-                    <button className="flex items-center gap-2 px-3 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg text-xs font-medium transition-colors text-foreground">
+                    <button className="flex items-center gap-2 px-3 py-2 bg-muted hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg text-xs font-medium transition-colors text-foreground">
                         <DocumentTextIcon className="w-4 h-4" />
                         Save Draft
                     </button>
@@ -405,7 +405,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                         }}
                         disabled={totalIssues > 0}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-sm ${totalIssues > 0
-                            ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed'
+                            ? 'bg-zinc-100 text-muted-foreground cursor-not-allowed'
                             : 'bg-green-600 text-white hover:bg-green-700 hover:shadow-md'
                             }`}
                     >
@@ -427,13 +427,13 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
             {/* Main Content Area */}
             <div className="flex-1 flex overflow-hidden">
                 {/* Left Panel: Unified Dashboard */}
-                <div className="flex-1 flex flex-col min-w-0 bg-zinc-50/50 dark:bg-zinc-800/50">
+                <div className="flex-1 flex flex-col min-w-0 bg-muted/50 dark:bg-zinc-800/50">
 
                     {/* Status Summary & Exceptions */}
                     <div className="p-6 pb-2">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                             {/* Validated Stats */}
-                            <div className="bg-white dark:bg-zinc-800 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center justify-between">
+                            <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex items-center justify-between">
                                 <div>
                                     <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Validated Assets</p>
                                     <p className="text-2xl font-bold text-foreground mt-1">{stats.validated}</p>
@@ -444,7 +444,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                             </div>
 
                             {/* Total Value */}
-                            <div className="bg-white dark:bg-zinc-800 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center justify-between">
+                            <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex items-center justify-between">
                                 <div>
                                     <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Value</p>
                                     <p className="text-2xl font-bold text-foreground mt-1">{formatCurrency(stats.totalValue)}</p>
@@ -457,7 +457,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                             {/* Action Card */}
                             <div className={`p-4 rounded-xl border shadow-sm flex items-center justify-between transition-colors ${totalIssues > 0
                                 ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/30'
-                                : 'bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-800'
+                                : 'bg-muted dark:bg-zinc-800/50 border-border'
                                 }`}>
                                 <div>
                                     <p className={`text-xs font-medium uppercase tracking-wider ${totalIssues > 0 ? 'text-amber-700 dark:text-amber-500' : 'text-muted-foreground'}`}>
@@ -489,7 +489,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                             </button>
 
                             {isMappingExpanded && (
-                                <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 animate-in slide-in-from-top-2">
+                                <div className="bg-card rounded-xl border border-border p-4 animate-in slide-in-from-top-2">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         {mappingFields.slice(0, 4).map(field => (
                                             <div key={field.label} className="flex flex-col gap-1">
@@ -507,7 +507,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                         </div>
 
                         {/* Filter Tabs */}
-                        <div className="flex items-center gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800">
+                        <div className="flex items-center gap-2 mb-4 border-b border-border">
                             <button
                                 onClick={() => setFilter('all')}
                                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${filter === 'all'
@@ -544,9 +544,9 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                     {/* Scrollable List */}
                     <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-3 scrollbar-micro">
                         {filteredAssets.map(asset => (
-                            <div key={asset.id} className={`group bg-white dark:bg-zinc-800 rounded-xl border p-4 shadow-sm transition-all ${asset.status === 'review' || asset.status === 'suggestion'
+                            <div key={asset.id} className={`group bg-card rounded-xl border p-4 shadow-sm transition-all ${asset.status === 'review' || asset.status === 'suggestion'
                                 ? 'border-amber-200 dark:border-amber-800/30'
-                                : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
+                                : 'border-border hover:border-zinc-300 dark:hover:border-zinc-700'
                                 }`}>
                                 <div className="flex gap-4 items-start">
                                     {/* Status Icon */}
@@ -565,7 +565,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                                             <div>
                                                 <h4 className="font-semibold text-foreground text-sm truncate">{asset.description}</h4>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs text-muted-foreground font-mono bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">{asset.sku}</span>
+                                                    <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">{asset.sku}</span>
                                                     <span className="text-xs text-muted-foreground">Qty: {asset.qty}</span>
 
                                                     {asset.warranty && asset.warranty !== 'Standard Warranty' && (
@@ -584,19 +584,19 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
 
                                         {/* Issues / Suggestions Bar */}
                                         {(asset.status === 'review' || asset.status === 'suggestion') && (
-                                            <div className="mt-3 flex items-center justify-between p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
+                                            <div className="mt-3 flex items-center justify-between p-2 rounded-lg bg-muted dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
                                                 <div className="flex items-center gap-2 text-xs">
                                                     {asset.status === 'review' ? (
                                                         <>
                                                             <ExclamationTriangleIcon className="w-4 h-4 text-amber-600" />
                                                             <span className="text-amber-700 dark:text-amber-500 font-medium">Issue Detected:</span>
-                                                            <span className="text-zinc-600 dark:text-zinc-400">{asset.issues?.join(', ')}</span>
+                                                            <span className="text-muted-foreground">{asset.issues?.join(', ')}</span>
                                                         </>
                                                     ) : (
                                                         <>
                                                             <SparklesIcon className="w-4 h-4 text-blue-600" />
                                                             <span className="text-blue-700 dark:text-blue-500 font-medium">AI Suggestion:</span>
-                                                            <span className="text-zinc-600 dark:text-zinc-400">{asset.suggestion?.reason}</span>
+                                                            <span className="text-muted-foreground">{asset.suggestion?.reason}</span>
                                                         </>
                                                     )}
                                                 </div>
@@ -614,13 +614,13 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
                                         <button
                                             onClick={() => handleEdit(asset)}
-                                            className="p-1.5 text-zinc-400 hover:text-primary hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"
+                                            className="p-1.5 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg"
                                             title="Edit Asset"
                                         >
                                             <PencilSquareIcon className="w-4 h-4" />
                                         </button>
                                         <button
-                                            className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg"
+                                            className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg"
                                             title="Remove Asset"
                                         >
                                             <TrashIcon className="w-4 h-4" />
@@ -633,10 +633,10 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                 </div>
 
                 {/* Right Panel: Preview / Context */}
-                <div className="w-[380px] border-l border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 hidden xl:flex flex-col">
+                <div className="w-[380px] border-l border-border bg-muted dark:bg-zinc-800 hidden xl:flex flex-col">
                     {pricingStep === 'discounts' ? (
                         <div className="h-full flex flex-col">
-                            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                            <div className="p-4 border-b border-border flex items-center justify-between">
                                 <h3 className="font-bold flex items-center gap-2">
                                     <TagIcon className="w-5 h-5" />
                                     Discounts & Pricing
@@ -656,7 +656,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                     ) : (
                         // Default PDF Preview (Simplified)
                         <div className="h-full flex flex-col">
-                            <div className="p-3 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 flex justify-between items-center text-sm font-medium">
+                            <div className="p-3 border-b border-border bg-card flex justify-between items-center text-sm font-medium">
                                 <span className="flex items-center gap-2">
                                     <DocumentTextIcon className="w-4 h-4" />
                                     Source Document
@@ -705,7 +705,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
 
             {/* Render 'Report' Step Overlay */}
             {currentStep === 'report' && (
-                <div className="absolute inset-0 z-20 bg-zinc-50 dark:bg-zinc-800 flex flex-col p-8 items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="absolute inset-0 z-20 bg-muted dark:bg-zinc-800 flex flex-col p-8 items-center justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="max-w-3xl w-full">
                         <div className="text-center mb-10">
                             <h2 className="text-3xl font-bold font-brand text-foreground mb-2">Analysis Complete</h2>
@@ -714,7 +714,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
 
                         <div className="grid grid-cols-2 gap-6 mb-8">
                             {/* Context & Rules Card */}
-                            <div className="bg-white dark:bg-zinc-800 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-sm relative overflow-hidden group hover:border-amber-200 transition-colors">
+                            <div className="bg-card p-6 rounded-2xl border border-border shadow-sm relative overflow-hidden group hover:border-amber-200 transition-colors">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                                 <h3 className="text-lg font-bold flex items-center gap-2 mb-4 relative z-10">
                                     <div className="p-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-lg">
@@ -724,13 +724,13 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                                 </h3>
 
                                 <div className="space-y-4 relative z-10">
-                                    <div className="flex justify-between items-center p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+                                    <div className="flex justify-between items-center p-3 bg-muted dark:bg-zinc-800/50 rounded-lg">
                                         <span className="text-sm font-medium">Header Discrepancies</span>
                                         <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${headerIssues.length > 0 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
                                             {headerIssues.length} Issues
                                         </span>
                                     </div>
-                                    <div className="flex justify-between items-center p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+                                    <div className="flex justify-between items-center p-3 bg-muted dark:bg-zinc-800/50 rounded-lg">
                                         <span className="text-sm font-medium">Business Rule Alerts</span>
                                         <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${ruleIssues.length > 0 ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}>
                                             {ruleIssues.length} Alerts
@@ -740,7 +740,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                             </div>
 
                             {/* Line Items Card */}
-                            <div className="bg-white dark:bg-zinc-800 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-sm relative overflow-hidden group hover:border-blue-200 transition-colors">
+                            <div className="bg-card p-6 rounded-2xl border border-border shadow-sm relative overflow-hidden group hover:border-blue-200 transition-colors">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                                 <h3 className="text-lg font-bold flex items-center gap-2 mb-4 relative z-10">
                                     <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg">
@@ -750,13 +750,13 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                                 </h3>
 
                                 <div className="space-y-4 relative z-10">
-                                    <div className="flex justify-between items-center p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+                                    <div className="flex justify-between items-center p-3 bg-muted dark:bg-zinc-800/50 rounded-lg">
                                         <span className="text-sm font-medium">Confident Matches</span>
                                         <span className="px-2 py-0.5 bg-green-100 text-green-600 rounded-full text-xs font-bold">
                                             {stats.validated} Items
                                         </span>
                                     </div>
-                                    <div className="flex justify-between items-center p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+                                    <div className="flex justify-between items-center p-3 bg-muted dark:bg-zinc-800/50 rounded-lg">
                                         <span className="text-sm font-medium">Needs Verification</span>
                                         <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${stats.attention > 0 ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}>
                                             {stats.attention} Items
@@ -827,13 +827,13 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
             )}
 
             {currentStep === 'finalize' && (
-                <div className="absolute inset-0 z-20 bg-white dark:bg-zinc-800 flex flex-col animate-in slide-in-from-right duration-300">
-                    <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2 sticky top-0 bg-white dark:bg-zinc-800 z-10">
+                <div className="absolute inset-0 z-20 bg-card flex flex-col animate-in slide-in-from-right duration-300">
+                    <div className="p-4 border-b border-border flex items-center gap-2 sticky top-0 bg-card z-10">
                         <button onClick={() => setCurrentStep('review')} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
                             <ChevronDownIcon className="w-4 h-4 rotate-90" /> Back to Review
                         </button>
                     </div>
-                    <div className="flex-1 overflow-y-auto bg-zinc-50 dark:bg-zinc-800/50 scrollbar-micro p-4 md:p-8">
+                    <div className="flex-1 overflow-y-auto bg-muted dark:bg-zinc-800/50 scrollbar-micro p-4 md:p-8">
                         <div className="max-w-3xl mx-auto space-y-6 pb-20">
 
                             <div className="text-center mb-8">
@@ -842,9 +842,9 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                             </div>
 
                             {/* Accordion 1: Asset Summary */}
-                            <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm transition-all hover:shadow-md">
+                            <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm transition-all hover:shadow-md">
                                 <button
-                                    className="w-full p-4 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/30 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                    className="w-full p-4 flex items-center justify-between bg-muted/50 dark:bg-zinc-800/30 hover:bg-muted transition-colors"
                                     onClick={() => setActiveAccordion(activeAccordion === 'assets' ? null : 'assets')}
                                 >
                                     <div className="flex items-center gap-3 font-bold text-lg">
@@ -863,11 +863,11 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                                     <div className="p-0 animate-in slide-in-from-top-2 duration-200">
                                         <div className="max-h-[300px] overflow-y-auto scrollbar-micro border-t border-zinc-100 dark:border-zinc-800">
                                             {assets.map((a, idx) => (
-                                                <div key={a.id} className={`flex justify-between items-center p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors ${idx !== assets.length - 1 ? 'border-b border-zinc-100 dark:border-zinc-800' : ''}`}>
+                                                <div key={a.id} className={`flex justify-between items-center p-4 hover:bg-muted dark:hover:bg-zinc-800/50 transition-colors ${idx !== assets.length - 1 ? 'border-b border-zinc-100 dark:border-zinc-800' : ''}`}>
                                                     <div className="flex-1 min-w-0 pr-4">
                                                         <div className="font-medium text-sm truncate" title={a.description}>{a.description}</div>
                                                         <div className="text-xs text-muted-foreground mt-0.5 flex gap-2">
-                                                            <span className="font-mono bg-zinc-100 dark:bg-zinc-800 px-1 rounded">{a.sku}</span>
+                                                            <span className="font-mono bg-muted px-1 rounded">{a.sku}</span>
                                                             <span>Qty: {a.qty}</span>
                                                         </div>
                                                     </div>
@@ -883,9 +883,9 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                             </div>
 
                             {/* Accordion 2: Warranties */}
-                            <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm transition-all hover:shadow-md">
+                            <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm transition-all hover:shadow-md">
                                 <button
-                                    className="w-full p-4 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/30 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                    className="w-full p-4 flex items-center justify-between bg-muted/50 dark:bg-zinc-800/30 hover:bg-muted transition-colors"
                                     onClick={() => setActiveAccordion(activeAccordion === 'warranties' ? null : 'warranties')}
                                 >
                                     <div className="flex items-center gap-3 font-bold text-lg">
@@ -895,7 +895,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                                         Warranties
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        <span className="text-xs px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded text-muted-foreground">Standard & Extended</span>
+                                        <span className="text-xs px-2 py-1 bg-muted rounded text-muted-foreground">Standard & Extended</span>
                                         <ChevronDownIcon className={`w-5 h-5 transition-transform duration-300 ${activeAccordion === 'warranties' ? 'rotate-180' : ''}`} />
                                     </div>
                                 </button>
@@ -915,7 +915,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
 
                                             <button
                                                 onClick={() => setIsWarrantyMenuOpen(true)}
-                                                className="w-full py-2 border border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg text-sm text-muted-foreground hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-foreground transition-colors flex items-center justify-center gap-2"
+                                                className="w-full py-2 border border-dashed border-zinc-300 dark:border-zinc-700 rounded-lg text-sm text-muted-foreground hover:bg-muted dark:hover:bg-zinc-800 hover:text-foreground transition-colors flex items-center justify-center gap-2"
                                             >
                                                 <PencilSquareIcon className="w-4 h-4" />
                                                 Modify Warranty Selections
@@ -926,9 +926,9 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                             </div>
 
                             {/* Accordion 3: Discounts */}
-                            <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm transition-all hover:shadow-md">
+                            <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm transition-all hover:shadow-md">
                                 <button
-                                    className="w-full p-4 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/30 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                    className="w-full p-4 flex items-center justify-between bg-muted/50 dark:bg-zinc-800/30 hover:bg-muted transition-colors"
                                     onClick={() => setActiveAccordion(activeAccordion === 'discounts' ? null : 'discounts')}
                                 >
                                     <div className="flex items-center gap-3 font-bold text-lg">
@@ -958,7 +958,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                             </div>
 
                             {/* Totals & Submit Section */}
-                            <div className="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl p-6 md:p-8 mt-8 sticky bottom-4 z-20">
+                            <div className="bg-card rounded-2xl border border-border shadow-xl p-6 md:p-8 mt-8 sticky bottom-4 z-20">
                                 <div className="flex flex-col md:flex-row justify-between items-end mb-6 pb-6 border-b border-zinc-100 dark:border-zinc-800">
                                     <div className="mb-4 md:mb-0">
                                         <span className="block text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">Estimated Total</span>
@@ -975,7 +975,7 @@ export default function AssetReviewArtifact({ data, source = 'upload' }: { data:
                                             setFinalType('quote');
                                             setShowSuccess(true);
                                         }}
-                                        className="w-full py-4 bg-white dark:bg-zinc-800 border-2 border-zinc-200 dark:border-zinc-700 text-foreground rounded-xl font-bold text-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
+                                        className="w-full py-4 bg-card border-2 border-border text-foreground rounded-xl font-bold text-lg hover:bg-muted dark:hover:bg-zinc-700 hover:scale-[1.01] transition-all flex items-center justify-center gap-2"
                                     >
                                         Create Quote Only
                                     </button>

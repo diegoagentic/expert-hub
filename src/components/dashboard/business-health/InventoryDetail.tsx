@@ -43,7 +43,7 @@ const lowStockItems = [
         status: 'Low Stock',
         statusColor: 'text-yellow-500',
         action: 'MONITOR',
-        actionColor: 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20'
+        actionColor: 'bg-muted0/10 text-muted-foreground border-zinc-500/20'
     },
     {
         sku: 'SKU-0219',
@@ -54,13 +54,13 @@ const lowStockItems = [
         status: 'Adequate',
         statusColor: 'text-brand-500',
         action: 'MONITOR',
-        actionColor: 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20'
+        actionColor: 'bg-muted0/10 text-muted-foreground border-zinc-500/20'
     }
 ];
 
 export default function InventoryDetail({ className }: { className?: string }) {
     return (
-        <div className={`bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200 -mt-[1px] relative z-0 ${className}`}>
+        <div className={`bg-card border border-border rounded-xl p-6 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200 -mt-[1px] relative z-0 ${className}`}>
 
             {/* Toolbar */}
             <div className="flex justify-between items-center mb-6">
@@ -103,10 +103,10 @@ export default function InventoryDetail({ className }: { className?: string }) {
             {/* List Items */}
             <div className="space-y-2">
                 {lowStockItems.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-12 items-center text-sm px-2 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 rounded-lg transition-colors cursor-pointer group">
+                    <div key={idx} className="grid grid-cols-12 items-center text-sm px-2 py-3 hover:bg-muted dark:hover:bg-zinc-700/50 rounded-lg transition-colors cursor-pointer group">
                         <div className="col-span-3 font-medium text-foreground">{item.name}</div>
                         <div className="col-span-2">
-                            <span className="px-2 py-0.5 rounded text-xs bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 font-mono">
+                            <span className="px-2 py-0.5 rounded text-xs bg-zinc-100 dark:bg-zinc-700 text-muted-foreground dark:text-zinc-300 font-mono">
                                 {item.sku}
                             </span>
                         </div>

@@ -18,15 +18,15 @@ const activities = [
 
 export function RecentActivityList() {
     return (
-        <div className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 h-full shadow-sm dark:shadow-none">
+        <div className="bg-card border border-border rounded-xl p-6 h-full shadow-sm dark:shadow-none">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Recent Activity</h3>
-                    <div className="flex items-center gap-1 text-xs text-zinc-500 mt-0.5">
+                    <h3 className="text-lg font-semibold text-foreground">Recent Activity</h3>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                         Workvel <ChevronDownIcon className="w-3 h-3" />
                     </div>
                 </div>
-                <button className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700/50 rounded-md hover:text-zinc-900 dark:hover:text-white transition-colors">
+                <button className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-muted-foreground dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-700/50 rounded-md hover:text-foreground transition-colors">
                     Related to You
                     <ChevronDownIcon className="w-3 h-3" />
                 </button>
@@ -40,18 +40,18 @@ export function RecentActivityList() {
                                 <activity.icon className="w-5 h-5" />
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-200">{activity.title}</span>
-                                <span className="text-xs text-zinc-500">{activity.time}</span>
+                                <span className="text-sm font-medium text-foreground">{activity.title}</span>
+                                <span className="text-xs text-muted-foreground">{activity.time}</span>
                                 {activity.description && (
-                                    <span className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 max-w-[200px] truncate">{activity.description}</span>
+                                    <span className="mt-1 text-xs text-muted-foreground max-w-[200px] truncate">{activity.description}</span>
                                 )}
                             </div>
                         </div>
-                        <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500 tabular-nums">{activity.ref}</span>
+                        <span className="text-xs font-medium text-muted-foreground dark:text-muted-foreground tabular-nums">{activity.ref}</span>
                     </div>
                 ))}
             </div>
-            <button className="text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-white mt-6 transition-colors">See all</button>
+            <button className="text-xs font-medium text-muted-foreground hover:text-foreground mt-6 transition-colors">See all</button>
         </div>
     );
 }

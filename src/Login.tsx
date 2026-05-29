@@ -132,9 +132,9 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: () => void }
                                                         <span className="font-semibold text-sm truncate">{selectedOrg.name}</span>
                                                         <span className="h-2 w-2 rounded-full bg-green-500 shrink-0"></span>
                                                     </div>
-                                                    <div className="text-xs text-zinc-400 truncate">{selectedOrg.type} • {selectedOrg.users} users</div>
+                                                    <div className="text-xs text-muted-foreground truncate">{selectedOrg.type} • {selectedOrg.users} users</div>
                                                 </div>
-                                                <ChevronDownIcon className={`w-5 h-5 text-zinc-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                                                <ChevronDownIcon className={`w-5 h-5 text-muted-foreground transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                                             </button>
 
                                             {isDropdownOpen && (
@@ -150,11 +150,11 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: () => void }
                                                             }}
                                                         >
                                                             <div className="h-8 w-8 bg-white/5 rounded-lg flex items-center justify-center shrink-0">
-                                                                <BuildingOfficeIcon className="w-4 h-4 text-zinc-400" />
+                                                                <BuildingOfficeIcon className="w-4 h-4 text-muted-foreground" />
                                                             </div>
                                                             <div className="flex-1">
                                                                 <div className="font-medium text-sm text-white">{org.name}</div>
-                                                                <div className="text-xs text-zinc-500">{org.type}</div>
+                                                                <div className="text-xs text-muted-foreground">{org.type}</div>
                                                             </div>
                                                         </button>
                                                     ))}
@@ -170,7 +170,7 @@ export default function Login({ onLoginSuccess }: { onLoginSuccess: () => void }
                                         name="email"
                                         type="email"
                                         defaultValue="hisalim.ux@gmail.com"
-                                        className="w-full bg-white/10 border border-white/20 text-white focus:border-white/40 focus:ring-0 rounded-lg h-12 px-4 placeholder:text-zinc-400 outline-none transition-colors"
+                                        className="w-full bg-white/10 border border-white/20 text-white focus:border-white/40 focus:ring-0 rounded-lg h-12 px-4 placeholder:text-muted-foreground outline-none transition-colors"
                                     />
                                 </div>
 
