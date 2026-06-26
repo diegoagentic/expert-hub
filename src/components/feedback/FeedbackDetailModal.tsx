@@ -53,13 +53,19 @@ function statusPresentation(state: FeedbackState): StatusPresentation {
 }
 
 // Action transitions per current state · matches prod button visibility.
-function nextActions(state: FeedbackState): FeedbackState[] {
+// Terminals (Closed/Dropped/Duplicated) exponen una acción "Reopen" que
+// regresa el feedback a Submitted · útil para QA + casos legítimos donde
+// el feedback se descartó por error.
+interface ActionOption { label: string; target: FeedbackState }
+function nextActions(state: FeedbackState): ActionOption[] {
     switch (state) {
-        case 'Submitted': return ['Triaged', 'Dropped', 'Duplicated']
-        case 'Triaged':   return ['Resolved', 'Dropped', 'Duplicated']
-        case 'Assigned':  return ['Resolved', 'Dropped', 'Duplicated']
-        case 'Resolved':  return ['Closed']
-        default: return []
+        case 'Submitted':  return [{ label: 'Triaged', target: 'Triaged' }, { label: 'Dropped', target: 'Dropped' }, { label: 'Duplicated', target: 'Duplicated' }]
+        case 'Triaged':    return [{ label: 'Resolved', target: 'Resolved' }, { label: 'Dropped', target: 'Dropped' }, { label: 'Duplicated', target: 'Duplicated' }]
+        case 'Assigned':   return [{ label: 'Resolved', target: 'Resolved' }, { label: 'Dropped', target: 'Dropped' }, { label: 'Duplicated', target: 'Duplicated' }]
+        case 'Resolved':   return [{ label: 'Closed', target: 'Closed' }, { label: 'Reopen', target: 'Submitted' }]
+        case 'Closed':     return [{ label: 'Reopen', target: 'Submitted' }]
+        case 'Dropped':    return [{ label: 'Reopen', target: 'Submitted' }]
+        case 'Duplicated': return [{ label: 'Reopen', target: 'Submitted' }]
     }
 }
 
@@ -152,7 +158,7 @@ export default function FeedbackDetailModal({ isOpen, onClose, feedback, onTrans
                             leaveFrom="opacity-100 scale-100"
                             leaveTo="opacity-0 scale-95"
                         >
-                            <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-card text-left shadow-2xl border border-border flex flex-col max-h-[90vh]">
+                            <Dialog.Panel className="w-full max-w-5xl transform overflow-hidden rounded-2xl bg-card text-left shadow-2xl border border-border flex flex-col max-h-[90vh]">
                                 {/* HEADER · icon + title + ID chip + tags + status pill + close */}
                                 <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
                                     <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0">
@@ -286,12 +292,12 @@ export default function FeedbackDetailModal({ isOpen, onClose, feedback, onTrans
                                             <div className="flex items-center gap-2 shrink-0">
                                                 {actions.map(action => (
                                                     <button
-                                                        key={action}
+                                                        key={action.label}
                                                         type="button"
-                                                        onClick={() => onTransition(feedback.id, action)}
+                                                        onClick={() => onTransition(feedback.id, action.target)}
                                                         className="px-3 py-1.5 rounded-lg bg-card border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors shadow-sm"
                                                     >
-                                                        {action}
+                                                        {action.label}
                                                     </button>
                                                 ))}
                                             </div>
