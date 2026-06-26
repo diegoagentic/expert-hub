@@ -122,11 +122,11 @@ export default function FeedbackDetailModal({ isOpen, onClose, feedback, onTrans
                             leaveFrom="opacity-100 scale-100"
                             leaveTo="opacity-0 scale-95"
                         >
-                            <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-card text-left shadow-2xl border border-border flex flex-col max-h-[90vh]">
+                            <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-card text-left shadow-2xl border border-border flex flex-col max-h-[90vh]">
                                 {/* HEADER · icon + title + ID chip + tags + status pill + close */}
                                 <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
-                                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                                        <MessageSquare className="h-5 w-5 text-primary" />
+                                    <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0">
+                                        <MessageSquare className="h-5 w-5 text-purple-600" />
                                     </div>
                                     <div className="flex items-center gap-2 flex-1 min-w-0">
                                         <h2 className="text-lg font-semibold text-foreground">Feedback Detail</h2>
@@ -279,6 +279,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function StepTimeline({ currentStep, currentState }: { currentStep: number; currentState: FeedbackState }) {
     // If current state is off-timeline (Dropped/Duplicated), don't highlight any step.
+    // Colors · BLUE para completed/current matches el status pill en prod (no lime/primary).
     const offTimeline = currentState === 'Dropped' || currentState === 'Duplicated'
     return (
         <div className="flex items-center justify-between">
@@ -289,20 +290,20 @@ function StepTimeline({ currentStep, currentState }: { currentStep: number; curr
                     <Fragment key={stateName}>
                         <div className="flex flex-col items-center gap-1.5 shrink-0">
                             <div className={`h-9 w-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
-                                isCompleted ? 'bg-primary text-primary-foreground'
-                                : isCurrent ? 'bg-primary/10 text-primary border-2 border-primary'
+                                isCompleted ? 'bg-blue-500 text-white'
+                                : isCurrent ? 'bg-card text-blue-600 border-2 border-blue-500'
                                 : 'bg-card text-muted-foreground border-2 border-border'
                             }`}>
                                 {isCompleted ? <Check className="h-4 w-4" /> : i + 1}
                             </div>
                             <span className={`text-[11px] font-medium ${
-                                isCurrent ? 'text-primary' : isCompleted ? 'text-foreground' : 'text-muted-foreground'
+                                isCurrent ? 'text-blue-600' : isCompleted ? 'text-foreground' : 'text-muted-foreground'
                             }`}>
                                 {stateName}
                             </span>
                         </div>
                         {i < TIMELINE_STATES.length - 1 && (
-                            <div className={`h-0.5 flex-1 mx-2 ${isCompleted ? 'bg-primary' : 'bg-border'}`} />
+                            <div className={`h-0.5 flex-1 mx-2 ${isCompleted ? 'bg-blue-500' : 'bg-border'}`} />
                         )}
                     </Fragment>
                 )
