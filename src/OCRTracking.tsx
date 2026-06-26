@@ -17,6 +17,8 @@ import UploadDocumentModal from './components/ocr/UploadDocumentModal'
 import PreflightSyncModal from './components/ocr/PreflightSyncModal'
 import { TEAM_MEMBERS, avatarGradient } from './components/team/teamMembers'
 import { openOriginalMockPdf } from './utils/viewOriginalMockPdf'
+import FeedbackComposerModal, { type FeedbackContext, type FeedbackSubmission } from './components/feedback/FeedbackComposerModal'
+import { useTenant } from './TenantContext'
 
 interface OcrDoc {
     id: string
@@ -97,7 +99,24 @@ export default function OCRTracking({ onLogout, onNavigate, onConvertDocument }:
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban')
     const [searchQuery, setSearchQuery] = useState('')
     const [activeTab, setActiveTab] = useState<'all' | 'identified' | 'capturing' | 'inconsistencies' | 'in_progress' | 'processed' | 'completed' | 'deprecated'>('all')
+    const [feedbackContext, setFeedbackContext] = useState<FeedbackContext | null>(null)
     const { toasts, addToast, dismissToast } = useToast()
+    const { selectedTenants } = useTenant()
+
+    const handleSendFeedback = (doc: { id: string; vendor: string; type: string; status: string }) => {
+        setFeedbackContext({ docId: doc.id, vendor: doc.vendor, docType: doc.type, status: doc.status })
+    }
+
+    const handleFeedbackSubmit = (s: FeedbackSubmission) => {
+        try {
+            const KEY = 'expert-hub.feedback.submissions'
+            const raw = localStorage.getItem(KEY)
+            const existing = raw ? JSON.parse(raw) : []
+            existing.push({ ...s, id: `FB-${Date.now().toString(36).toUpperCase()}` })
+            localStorage.setItem(KEY, JSON.stringify(existing))
+        } catch {}
+        addToast('success', `Feedback submitted · ${s.category}${s.severity ? ` · ${s.severity}` : ''}`)
+    }
 
     const handleMarkCompleted = (docId: string) => {
         setDocuments(prev => prev.map(d => d.id === docId ? { ...d, status: 'completed' } : d))
@@ -559,11 +578,21 @@ export default function OCRTracking({ onLogout, onNavigate, onConvertDocument }:
                 onSave={(d) => {
                     addToast('success', `Document saved · ${d.vendor}`)
                 }}
+                onSendFeedback={(d) => handleSendFeedback({ id: d.id, vendor: d.vendor, type: d.type, status: d.status })}
                 onDownloadOriginal={(d) => {
                     openOriginalMockPdf(d).catch(() => {
                         addToast('error', `Could not open original PDF · ${d.name}`)
                     })
                 }}
+            />
+
+            <FeedbackComposerModal
+                isOpen={!!feedbackContext}
+                onClose={() => setFeedbackContext(null)}
+                onSubmit={handleFeedbackSubmit}
+                experienceLabel="expert-hub · OCR Tracking"
+                workspaceLabel={selectedTenants[0] ?? 'SPECIAL T'}
+                context={feedbackContext ?? undefined}
             />
 
             {/* Mark-as-Deprecated reason picker */}

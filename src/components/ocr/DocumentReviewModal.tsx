@@ -13,6 +13,8 @@ interface DocumentReviewModalProps {
     onClose: () => void
     doc: OcrDocCardData | null
     onSave?: (doc: OcrDocCardData) => void
+    /** FB-06a / FB-10 · opens the feedback composer with this doc as auto-attached context. */
+    onSendFeedback?: (doc: OcrDocCardData) => void
     onDownloadOriginal?: (doc: OcrDocCardData) => void
 }
 
@@ -220,7 +222,7 @@ function EditableValue({ value, editable, onChange }: { value: string; editable?
     )
 }
 
-export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onDownloadOriginal }: DocumentReviewModalProps) {
+export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSendFeedback, onDownloadOriginal }: DocumentReviewModalProps) {
     const [tab, setTab] = useState<'header' | 'lineItems' | 'linked'>('header')
     const [exportOpen, setExportOpen] = useState(false)
     const [previewDoc, setPreviewDoc] = useState<LinkedDoc | null>(null)
@@ -625,7 +627,21 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onDo
 
                             {/* Footer */}
                             <div className="border-t border-border px-6 py-4 flex items-center justify-between">
-                                <span className="text-xs text-muted-foreground font-medium">{confidence}% confidence</span>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xs text-muted-foreground font-medium">{confidence}% confidence</span>
+                                    {onSendFeedback && doc && (
+                                        <button
+                                            onClick={() => onSendFeedback(doc)}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                            title="Send feedback about this document"
+                                        >
+                                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                            </svg>
+                                            Send feedback
+                                        </button>
+                                    )}
+                                </div>
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={onClose}

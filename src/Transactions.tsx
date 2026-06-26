@@ -29,6 +29,8 @@ import AckReconciliationModal from './components/AckReconciliationModal'
 import ComparisonLauncher from './components/comparison/ComparisonLauncher'
 import DocumentReviewModal from './components/ocr/DocumentReviewModal'
 import type { OcrDocCardData } from './components/ocr/OcrDocCard'
+import FeedbackComposerModal, { type FeedbackContext, type FeedbackSubmission } from './components/feedback/FeedbackComposerModal'
+import { useTenant } from './TenantContext'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 function cn(...inputs: (string | undefined | null | false)[]) {
@@ -671,6 +673,20 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
     const [isReconciliationOpen, setIsReconciliationOpen] = useState(false);
     const [compareAckDoc, setCompareAckDoc] = useState<any>(null);
     const [previewDoc, setPreviewDoc] = useState<OcrDocCardData | null>(null);
+    const [feedbackContext, setFeedbackContext] = useState<FeedbackContext | null>(null);
+    const { selectedTenants } = useTenant();
+
+    const handleFeedbackSubmit = (s: FeedbackSubmission) => {
+        try {
+            const KEY = 'expert-hub.feedback.submissions';
+            const raw = localStorage.getItem(KEY);
+            const existing = raw ? JSON.parse(raw) : [];
+            existing.push({ ...s, id: `FB-${Date.now().toString(36).toUpperCase()}` });
+            localStorage.setItem(KEY, JSON.stringify(existing));
+        } catch {}
+        // Transactions.tsx no expone addToast del nivel padre · fallback console + en R2 wire al toast layer global.
+        // Por ahora la confirmación viene del propio modal cerrándose.
+    };
 
     // Multi-select export state
     const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
@@ -3133,7 +3149,21 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
             
             <DocumentConversionModal isOpen={isConversionOpen} onClose={() => setIsConversionOpen(false)} mode={conversionMode} triggerToast={triggerToast} />
             <AckReconciliationModal isOpen={isReconciliationOpen} onClose={() => setIsReconciliationOpen(false)} triggerToast={triggerToast} />
-            <DocumentReviewModal isOpen={!!previewDoc} onClose={() => setPreviewDoc(null)} doc={previewDoc} />
+            <DocumentReviewModal
+                isOpen={!!previewDoc}
+                onClose={() => setPreviewDoc(null)}
+                doc={previewDoc}
+                onSendFeedback={(d) => setFeedbackContext({ docId: d.id, vendor: d.vendor, docType: d.type, status: d.status })}
+            />
+
+            <FeedbackComposerModal
+                isOpen={!!feedbackContext}
+                onClose={() => setFeedbackContext(null)}
+                onSubmit={handleFeedbackSubmit}
+                experienceLabel="expert-hub · Transactions"
+                workspaceLabel={selectedTenants[0] ?? 'SPECIAL T'}
+                context={feedbackContext ?? undefined}
+            />
 
             {/* Floating Export Bar */}
             {isMultiSelectMode && (

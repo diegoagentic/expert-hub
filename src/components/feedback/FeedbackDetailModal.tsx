@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { MessageSquare, Copy, X, UserPlus, Paperclip, FileText, Download, ExternalLink, Check } from 'lucide-react'
+import { MessageSquare, Copy, X, UserPlus, Paperclip, FileText, Download, ExternalLink, Clock, Eye, UserCheck, CheckCircle2, Lock, Ban } from 'lucide-react'
 import type { FeedbackItem, FeedbackState, Severity, Category } from '../../FeedbackBoard'
 import { avatarGradient } from '../team/teamMembers'
 
@@ -14,13 +14,42 @@ interface FeedbackDetailModalProps {
     onTransition: (id: string, next: FeedbackState) => void
 }
 
-// Step timeline · 5 ordered lifecycle states (matches prod left→right).
-// Dropped + Duplicated are terminal off-timeline (action buttons).
-const TIMELINE_STATES: FeedbackState[] = ['Submitted', 'Triaged', 'Assigned', 'Resolved', 'Closed']
+// Status presentation · per Diego decision (Fase B · 2026-06-26) reemplazo
+// del step timeline horizontal por un único status badge prominente acorde
+// governance Strata DS. Helper text + icon comunican el progreso sin dots.
+interface StatusPresentation {
+    icon: typeof Clock
+    label: string
+    helper: string
+    iconColor: string
+    bgColor: string
+    borderColor: string
+}
 
-function stepIndex(state: FeedbackState): number {
-    const i = TIMELINE_STATES.indexOf(state)
-    return i === -1 ? 0 : i // Dropped/Duplicated map to step 0 visually
+function statusPresentation(state: FeedbackState): StatusPresentation {
+    switch (state) {
+        case 'Submitted':
+            return { icon: Clock, label: 'Submitted', helper: 'Waiting for expert review',
+                iconColor: 'text-blue-600', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/30' }
+        case 'Triaged':
+            return { icon: Eye, label: 'Triaged', helper: 'Reviewed · pending assignment',
+                iconColor: 'text-blue-600', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/30' }
+        case 'Assigned':
+            return { icon: UserCheck, label: 'Assigned', helper: 'Owner picked up the work',
+                iconColor: 'text-amber-600', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/30' }
+        case 'Resolved':
+            return { icon: CheckCircle2, label: 'Resolved', helper: 'Fix delivered · pending closure',
+                iconColor: 'text-green-600', bgColor: 'bg-green-500/10', borderColor: 'border-green-500/30' }
+        case 'Closed':
+            return { icon: Lock, label: 'Closed', helper: 'Loop complete · no further action',
+                iconColor: 'text-muted-foreground', bgColor: 'bg-muted', borderColor: 'border-border' }
+        case 'Dropped':
+            return { icon: Ban, label: 'Dropped', helper: 'Out of scope · won’t fix',
+                iconColor: 'text-muted-foreground', bgColor: 'bg-muted', borderColor: 'border-border' }
+        case 'Duplicated':
+            return { icon: Copy, label: 'Duplicated', helper: 'Linked to an existing report',
+                iconColor: 'text-purple-600', bgColor: 'bg-purple-500/10', borderColor: 'border-purple-500/30' }
+    }
 }
 
 // Action transitions per current state · matches prod button visibility.
@@ -89,7 +118,8 @@ function nameFromEmail(email: string): string {
 export default function FeedbackDetailModal({ isOpen, onClose, feedback, onTransition }: FeedbackDetailModalProps) {
     if (!feedback) return null
 
-    const currentStep = stepIndex(feedback.state)
+    const presentation = statusPresentation(feedback.state)
+    const StatusIcon = presentation.icon
     const actions = nextActions(feedback.state)
     const submittedByEmail = emailFromHandle(feedback.submittedBy)
     const submittedByName = nameFromEmail(submittedByEmail)
@@ -241,23 +271,32 @@ export default function FeedbackDetailModal({ isOpen, onClose, feedback, onTrans
                                     )}
                                 </div>
 
-                                {/* FOOTER · step timeline + action buttons */}
-                                <div className="px-6 py-5 border-t border-border bg-card space-y-5">
-                                    <StepTimeline currentStep={currentStep} currentState={feedback.state} />
-                                    {actions.length > 0 && (
-                                        <div className="flex items-center justify-end gap-2">
-                                            {actions.map(action => (
-                                                <button
-                                                    key={action}
-                                                    type="button"
-                                                    onClick={() => onTransition(feedback.id, action)}
-                                                    className="px-4 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors"
-                                                >
-                                                    {action}
-                                                </button>
-                                            ))}
+                                {/* FOOTER · status badge XL prominente (reemplaza step timeline · Fase B) + actions */}
+                                <div className="px-6 py-5 border-t border-border bg-card space-y-4">
+                                    <div className={`flex items-center gap-4 p-4 rounded-xl border ${presentation.bgColor} ${presentation.borderColor}`}>
+                                        <div className={`h-12 w-12 rounded-xl bg-card flex items-center justify-center shrink-0 ${presentation.iconColor}`}>
+                                            <StatusIcon className="h-6 w-6" />
                                         </div>
-                                    )}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status</div>
+                                            <div className={`text-lg font-bold ${presentation.iconColor}`}>{presentation.label}</div>
+                                            <div className="text-xs text-muted-foreground mt-0.5">{presentation.helper}</div>
+                                        </div>
+                                        {actions.length > 0 && (
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                {actions.map(action => (
+                                                    <button
+                                                        key={action}
+                                                        type="button"
+                                                        onClick={() => onTransition(feedback.id, action)}
+                                                        className="px-3 py-1.5 rounded-lg bg-card border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors shadow-sm"
+                                                    >
+                                                        {action}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </Dialog.Panel>
                         </Transition.Child>
@@ -277,37 +316,3 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     )
 }
 
-function StepTimeline({ currentStep, currentState }: { currentStep: number; currentState: FeedbackState }) {
-    // If current state is off-timeline (Dropped/Duplicated), don't highlight any step.
-    // Colors · BLUE para completed/current matches el status pill en prod (no lime/primary).
-    const offTimeline = currentState === 'Dropped' || currentState === 'Duplicated'
-    return (
-        <div className="flex items-center justify-between">
-            {TIMELINE_STATES.map((stateName, i) => {
-                const isCompleted = !offTimeline && i < currentStep
-                const isCurrent = !offTimeline && i === currentStep
-                return (
-                    <Fragment key={stateName}>
-                        <div className="flex flex-col items-center gap-1.5 shrink-0">
-                            <div className={`h-9 w-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
-                                isCompleted ? 'bg-blue-500 text-white'
-                                : isCurrent ? 'bg-card text-blue-600 border-2 border-blue-500'
-                                : 'bg-card text-muted-foreground border-2 border-border'
-                            }`}>
-                                {isCompleted ? <Check className="h-4 w-4" /> : i + 1}
-                            </div>
-                            <span className={`text-[11px] font-medium ${
-                                isCurrent ? 'text-blue-600' : isCompleted ? 'text-foreground' : 'text-muted-foreground'
-                            }`}>
-                                {stateName}
-                            </span>
-                        </div>
-                        {i < TIMELINE_STATES.length - 1 && (
-                            <div className={`h-0.5 flex-1 mx-2 ${isCompleted ? 'bg-blue-500' : 'bg-border'}`} />
-                        )}
-                    </Fragment>
-                )
-            })}
-        </div>
-    )
-}
