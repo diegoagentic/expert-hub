@@ -231,17 +231,26 @@ const recentQuotes = [
     { id: "QT-1022", customer: "Redwood School", project: "Classroom Refresh", amount: "$150,000", status: "Approved", date: "Dec 28, 2025", validUntil: "Jan 28, 2026", probability: "Closed", initials: "RS", statusColor: "green", location: "Portland" },
 ]
 
+// Ack mock data · canonical 3-stage taxonomy post-Neocon-review (2026-06).
+// Authority · Wendy Marchuck · sourced from inbound-outbound/src/Transactions.tsx.
+// "Discrepancy" status removed · detection info surfaces como `subFlag` chip
+// adyacente al STATUS badge. Legacy fields (inconsistency/tag) preservados para
+// que el accordion "Details" siga mostrando context adicional.
 const recentAcknowledgments = [
-    { id: "Acknowledgement-8842", relatedPo: "PO-2026-004", vendor: "AIS Furniture", status: "Received", date: "Jan 15, 2026", expShipDate: "Feb 28, 2026", inconsistency: "None", tag: null, initials: "AI", statusColor: "bg-blue-50 text-blue-700", location: "Tupelo, MS" },
-    { id: "Acknowledgement-8839", relatedPo: "PO-2026-001", vendor: "Herman Miller", status: "Reconciled", date: "Jan 14, 2026", expShipDate: "Feb 20, 2026", inconsistency: "None", tag: null, initials: "HM", statusColor: "bg-green-50 text-green-700", location: "Zeeland" },
-    { id: "Acknowledgement-8840", relatedPo: "PO-2026-002", vendor: "Steelcase", status: "Under Review", date: "Jan 13, 2026", expShipDate: "Pending", inconsistency: "Price Mismatch ($500)", tag: "Inconsistency" as const, initials: "SC", statusColor: "bg-red-50 text-red-700", location: "Grand Rapids" },
-    { id: "Acknowledgement-8841", relatedPo: "PO-2026-003", vendor: "Knoll", status: "Validated", date: "Jan 12, 2026", expShipDate: "Mar 01, 2026", inconsistency: "Backordered Items", tag: "Partial" as const, initials: "KN", statusColor: "bg-amber-50 text-amber-700", location: "East Greenville" },
+    { id: "Acknowledgement-8842", relatedPo: "PO-2026-004", vendor: "AIS Furniture", status: "Pending", subFlag: undefined as string | undefined, date: "Jan 15, 2026", expShipDate: "Feb 28, 2026", inconsistency: "None", tag: null, initials: "AI", statusColor: "bg-amber-50 text-amber-700", location: "Tupelo, MS" },
+    { id: "Acknowledgement-8839", relatedPo: "PO-2026-001", vendor: "Herman Miller", status: "Confirmed", subFlag: undefined as string | undefined, date: "Jan 14, 2026", expShipDate: "Feb 20, 2026", inconsistency: "None", tag: null, initials: "HM", statusColor: "bg-green-50 text-green-700", location: "Zeeland" },
+    { id: "Acknowledgement-8840", relatedPo: "PO-2026-002", vendor: "Steelcase", status: "Pending", subFlag: "price mismatch detected", date: "Jan 13, 2026", expShipDate: "Pending", inconsistency: "Price Mismatch ($500)", tag: "Inconsistency" as const, initials: "SC", statusColor: "bg-amber-50 text-amber-700", location: "Grand Rapids" },
+    { id: "Acknowledgement-8841", relatedPo: "PO-2026-003", vendor: "Knoll", status: "Partial", subFlag: "backorder detected", date: "Jan 12, 2026", expShipDate: "Mar 01, 2026", inconsistency: "Backordered Items", tag: "Partial" as const, initials: "KN", statusColor: "bg-amber-50 text-amber-700", location: "East Greenville" },
 ]
 
 // Pipeline stages
 const pipelineStages = ['Order Received', 'In Production', 'Ready to Ship', 'In Transit', 'Delivered']
 const quoteStages = ['Draft', 'Sent', 'Negotiating', 'Approved', 'Lost']
-const ackStages = ['Received', 'Fields Extracted', 'Under Review', 'Validated', 'Reconciled']
+// Ack funnel taxonomy · canonical 3-stage model post-Neocon-review (2026-06).
+// Authority · Wendy Marchuck > PDF > others. Reducido de 5 a 3 stages para
+// alinear con el modelo mental del operator (esperando manufacturer · con
+// excepciones · aprobado). Excepciones surface como `subFlag` chip por item.
+const ackStages = ['Pending', 'Partial', 'Confirmed']
 
 
 // Color Mapping for Status Icons
@@ -2367,9 +2376,23 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                                                     </span>
                                                                 </td>
                                                                 <td className="p-4">
-                                                                    <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset", order.statusColor)}>
-                                                                        {order.status}
-                                                                    </span>
+                                                                    <div className="flex flex-wrap items-center gap-1.5">
+                                                                        <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset", order.statusColor)}>
+                                                                            {order.status}
+                                                                        </span>
+                                                                        {/* L.2 · subFlag chip · surfaces detected exceptions (price mismatch,
+                                                                            backorder, sub) sin polución del status taxonomy. Ack tab only.
+                                                                            Authority · Wendy Marchuck (Neocon 2026-06). */}
+                                                                        {(order as any).subFlag && lifecycleTab === 'acknowledgments' && (
+                                                                            <span
+                                                                                title={`${order.status} · ${(order as any).subFlag}`}
+                                                                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 whitespace-nowrap"
+                                                                            >
+                                                                                <span aria-hidden="true">⚠</span>
+                                                                                {(order as any).subFlag}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 </td>
                                                                 <td className="p-4 text-sm text-muted-foreground">
                                                                     {lifecycleTab === 'quotes' ? (order.validUntil || order.date) : order.date}
