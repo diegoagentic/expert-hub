@@ -1,19 +1,26 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Search, MessageSquare, ExternalLink, MoreHorizontal, Inbox } from 'lucide-react'
 import Navbar from './components/Navbar'
 import Breadcrumbs from './components/Breadcrumbs'
 import { avatarGradient } from './components/team/teamMembers'
+import FeedbackDetailModal from './components/feedback/FeedbackDetailModal'
 
 interface FeedbackBoardProps {
     onLogout: () => void
     onNavigate: (page: string) => void
 }
 
-type Severity = 'Critical' | 'High' | 'Medium' | 'Low'
-type FeedbackState = 'Submitted' | 'Triaged' | 'Assigned' | 'Resolved' | 'Closed' | 'Dropped' | 'Duplicated'
-type Category = 'Bug' | 'Feature Request' | 'UI/UX' | 'Data' | 'Performance'
+export type Severity = 'Critical' | 'High' | 'Medium' | 'Low'
+export type FeedbackState = 'Submitted' | 'Triaged' | 'Assigned' | 'Resolved' | 'Closed' | 'Dropped' | 'Duplicated'
+export type Category = 'Bug' | 'Feature Request' | 'UI/UX' | 'Data' | 'Performance'
 
-interface FeedbackItem {
+export interface FeedbackAttachment {
+    name: string
+    type: string  // e.g., 'PDF', 'PNG'
+    sizeKB: number
+}
+
+export interface FeedbackItem {
     id: string
     description: string
     category: Category
@@ -23,6 +30,22 @@ interface FeedbackItem {
     submittedBy: string
     date: string
     jira?: string
+    experience?: string  // e.g., 'pdf-to-sif' · prod field
+    attachment?: FeedbackAttachment
+}
+
+// localStorage key namespace · per Fase A persistence decision (2026-06-26).
+const STATE_OVERRIDES_KEY = 'expert-hub.feedback.stateOverrides'
+
+function loadStateOverrides(): Record<string, FeedbackState> {
+    try {
+        const raw = localStorage.getItem(STATE_OVERRIDES_KEY)
+        return raw ? JSON.parse(raw) : {}
+    } catch { return {} }
+}
+
+function saveStateOverrides(overrides: Record<string, FeedbackState>) {
+    try { localStorage.setItem(STATE_OVERRIDES_KEY, JSON.stringify(overrides)) } catch {}
 }
 
 const FEEDBACK: FeedbackItem[] = [
@@ -32,6 +55,8 @@ const FEEDBACK: FeedbackItem[] = [
         category: 'Bug', severity: 'Critical', state: 'Assigned',
         assignedTo: { id: 'marcus', name: 'Marcus Webb', initials: 'MW' },
         submittedBy: 'r.ramirez@special-t.com', date: 'Jun 12, 2026', jira: 'OCR-318',
+        experience: 'pdf-to-sif',
+        attachment: { name: 'Magnuson-QT-2884.pdf', type: 'PDF', sizeKB: 412.3 },
     },
     {
         id: 'FB-1041',
@@ -39,6 +64,7 @@ const FEEDBACK: FeedbackItem[] = [
         category: 'Feature Request', severity: 'Medium', state: 'Triaged',
         assignedTo: { id: 'priya', name: 'Priya Shah', initials: 'PS' },
         submittedBy: 'c.morales@special-t.com', date: 'Jun 11, 2026', jira: 'OCR-309',
+        experience: 'expert-hub',
     },
     {
         id: 'FB-1040',
@@ -46,12 +72,15 @@ const FEEDBACK: FeedbackItem[] = [
         category: 'UI/UX', severity: 'Low', state: 'Resolved',
         assignedTo: { id: 'daniel', name: 'Daniel Okafor', initials: 'DO' },
         submittedBy: 'd.zuluaga@special-t.com', date: 'Jun 10, 2026', jira: 'OCR-301',
+        experience: 'expert-hub',
     },
     {
         id: 'FB-1039',
         description: 'Upload modal hangs on PDFs larger than 20MB',
         category: 'Performance', severity: 'High', state: 'Submitted',
         submittedBy: 'k.nguyen@special-t.com', date: 'Jun 10, 2026',
+        experience: 'pdf-to-sif',
+        attachment: { name: 'screenshot-hang.png', type: 'PNG', sizeKB: 1247.8 },
     },
     {
         id: 'FB-1038',
@@ -59,12 +88,14 @@ const FEEDBACK: FeedbackItem[] = [
         category: 'Data', severity: 'High', state: 'Assigned',
         assignedTo: { id: 'sarah', name: 'Sarah Johnson', initials: 'SJ' },
         submittedBy: 'r.ramirez@special-t.com', date: 'Jun 09, 2026', jira: 'OCR-296',
+        experience: 'expert-hub',
     },
     {
         id: 'FB-1037',
         description: 'Duplicate of FB-1031 — same discrepancy on Dubois custom carpentry',
         category: 'Bug', severity: 'Medium', state: 'Duplicated',
         submittedBy: 'c.morales@special-t.com', date: 'Jun 08, 2026',
+        experience: 'pdf-to-sif',
     },
     {
         id: 'FB-1036',
@@ -72,12 +103,22 @@ const FEEDBACK: FeedbackItem[] = [
         category: 'Bug', severity: 'Medium', state: 'Closed',
         assignedTo: { id: 'noah', name: 'Noah Fischer', initials: 'NF' },
         submittedBy: 'd.zuluaga@special-t.com', date: 'Jun 06, 2026', jira: 'OCR-284',
+        experience: 'expert-hub',
     },
     {
         id: 'FB-1035',
         description: 'Request: export reconciled records to CSV',
         category: 'Feature Request', severity: 'Low', state: 'Dropped',
         submittedBy: 'k.nguyen@special-t.com', date: 'Jun 04, 2026',
+        experience: 'expert-hub',
+    },
+    {
+        id: 'FB-7384D028',
+        description: 'Hey Diego, this is one feedback',
+        category: 'Bug', severity: 'High', state: 'Submitted',
+        submittedBy: 'reynier.rivero@agenticdream.com', date: 'Jun 26, 2026',
+        experience: 'pdf-to-sif',
+        attachment: { name: 'ACK-MAX-9999 — Acknowledgment.pdf', type: 'PDF', sizeKB: 238.8 },
     },
 ]
 
@@ -115,18 +156,31 @@ function stateClasses(s: FeedbackState): string {
 export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardProps) {
     const [activeTab, setActiveTab] = useState('all')
     const [query, setQuery] = useState('')
+    const [stateOverrides, setStateOverrides] = useState<Record<string, FeedbackState>>(() => loadStateOverrides())
+    const [selectedId, setSelectedId] = useState<string | null>(null)
+
+    useEffect(() => { saveStateOverrides(stateOverrides) }, [stateOverrides])
+
+    // Apply overrides from localStorage on top of seed mock data.
+    const items = useMemo<FeedbackItem[]>(() => {
+        return FEEDBACK.map(f => stateOverrides[f.id] ? { ...f, state: stateOverrides[f.id] } : f)
+    }, [stateOverrides])
+
+    const handleTransition = (id: string, next: FeedbackState) => {
+        setStateOverrides(prev => ({ ...prev, [id]: next }))
+    }
 
     const counts = useMemo(() => {
         const c: Record<string, number> = {
-            all: FEEDBACK.length,
-            jira: FEEDBACK.filter(f => f.jira).length,
+            all: items.length,
+            jira: items.filter(f => f.jira).length,
         }
-        for (const f of FEEDBACK) c[f.state] = (c[f.state] ?? 0) + 1
+        for (const f of items) c[f.state] = (c[f.state] ?? 0) + 1
         return c
-    }, [])
+    }, [items])
 
     const filtered = useMemo(() => {
-        return FEEDBACK.filter(f => {
+        return items.filter(f => {
             if (activeTab === 'jira' && !f.jira) return false
             if (activeTab !== 'all' && activeTab !== 'jira' && f.state !== activeTab) return false
             if (query.trim()) {
@@ -137,7 +191,9 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
             }
             return true
         })
-    }, [activeTab, query])
+    }, [activeTab, query, items])
+
+    const selected = useMemo(() => items.find(f => f.id === selectedId) ?? null, [items, selectedId])
 
     return (
         <div className="min-h-screen bg-background font-sans text-foreground pb-10">
@@ -223,7 +279,11 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                                 </thead>
                                 <tbody>
                                     {filtered.map(f => (
-                                        <tr key={f.id} className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors">
+                                        <tr
+                                            key={f.id}
+                                            onClick={() => setSelectedId(f.id)}
+                                            className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors cursor-pointer"
+                                        >
                                             <td className="px-4 py-3 max-w-md">
                                                 <div className="font-medium text-foreground">{f.description}</div>
                                                 <div className="text-xs text-muted-foreground">{f.id}</div>
@@ -255,7 +315,10 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                                             <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{f.date}</td>
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 {f.jira ? (
-                                                    <a className="inline-flex items-center gap-1 text-blue-600 hover:underline cursor-pointer">
+                                                    <a
+                                                        onClick={e => e.stopPropagation()}
+                                                        className="inline-flex items-center gap-1 text-blue-600 hover:underline cursor-pointer"
+                                                    >
                                                         {f.jira}
                                                         <ExternalLink className="h-3 w-3" />
                                                     </a>
@@ -265,6 +328,7 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 <button
+                                                    onClick={e => e.stopPropagation()}
                                                     className="h-8 w-8 rounded-lg hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                                                     title="Actions"
                                                     aria-label="Feedback actions"
@@ -280,6 +344,13 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                     )}
                 </div>
             </div>
+
+            <FeedbackDetailModal
+                isOpen={!!selected}
+                onClose={() => setSelectedId(null)}
+                feedback={selected}
+                onTransition={handleTransition}
+            />
         </div>
     )
 }
