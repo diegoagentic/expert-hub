@@ -27,7 +27,8 @@ import { avatarGradient } from './components/team/teamMembers'
 import DocumentConversionModal from './components/DocumentConversionModal'
 import AckReconciliationModal from './components/AckReconciliationModal'
 import ComparisonLauncher from './components/comparison/ComparisonLauncher'
-import DocumentPreviewModal from './components/DocumentPreviewModal'
+import DocumentReviewModal from './components/ocr/DocumentReviewModal'
+import type { OcrDocCardData } from './components/ocr/OcrDocCard'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 function cn(...inputs: (string | undefined | null | false)[]) {
@@ -380,13 +381,12 @@ interface ConvertedDoc {
 
 interface TransactionsProps {
     onLogout: () => void;
-    onNavigateToDetail: (type: string) => void;
     onNavigateToWorkspace: () => void;
     onNavigate: (page: string) => void;
     convertedDoc?: ConvertedDoc | null;
 }
 
-export default function Transactions({ onLogout, onNavigateToDetail, onNavigateToWorkspace, onNavigate, convertedDoc }: TransactionsProps) {
+export default function Transactions({ onLogout, onNavigateToWorkspace, onNavigate, convertedDoc }: TransactionsProps) {
     const { currentStep, nextStep, isDemoActive, setLupaStep, procCompleteStep } = ({ isDemoActive: false, currentStep: null, isSidebarCollapsed: false } as any);
     const activeProfile: any = null
     const isContinua = false
@@ -661,7 +661,7 @@ export default function Transactions({ onLogout, onNavigateToDetail, onNavigateT
     const [conversionMode, setConversionMode] = useState<'quote-to-order' | 'order-to-ack'>('quote-to-order');
     const [isReconciliationOpen, setIsReconciliationOpen] = useState(false);
     const [compareAckDoc, setCompareAckDoc] = useState<any>(null);
-    const [previewDoc, setPreviewDoc] = useState<any>(null);
+    const [previewDoc, setPreviewDoc] = useState<OcrDocCardData | null>(null);
 
     // Multi-select export state
     const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
@@ -691,6 +691,28 @@ export default function Transactions({ onLogout, onNavigateToDetail, onNavigateT
     const openPEDPreview = (type: PEDDocumentType, id?: string) => {
         setPedData(getMockPEDData(type, id));
         setIsPEDOpen(true);
+    };
+
+    // Bridge · transforma cualquier transaction row → OcrDocCardData para que
+    // el DocumentReviewModal (compartido con OCR) abra con la data correcta.
+    // line items count derivado del amount · más valor = más líneas (clamp 2-5).
+    const transactionToOcrDoc = (order: any, tab: string): OcrDocCardData => {
+        const id = String(order.id ?? 'TXN-0000').replace('#', '');
+        const type: OcrDocCardData['type'] = tab === 'acknowledgments' ? 'Acknowledgment'
+            : tab === 'quotes' ? 'Quote'
+            : 'Purchase Order';
+        const vendor: string = order.vendor ?? order.customer ?? order.client ?? '—';
+        const name = type === 'Acknowledgment'
+            ? `${id}_${vendor}.pdf`
+            : `${id}_${type.replace(' ', '')}.pdf`;
+        const amount = Number(String(order.amount ?? '0').replace(/[$,]/g, '')) || 0;
+        const lineItems = Math.max(2, Math.min(5, Math.round(amount / 30000)));
+        return {
+            id, name, vendor, type,
+            status: 'processed',
+            lineItems,
+            date: order.date ?? order.validUntil ?? '',
+        };
     };
 
     // Toast State
@@ -2362,8 +2384,9 @@ export default function Transactions({ onLogout, onNavigateToDetail, onNavigateT
                                                                             <ArrowDownTrayIcon className="h-4 w-4" />
                                                                         </button>
                                                                         <button
-                                                                            onClick={(e) => { e.stopPropagation(); onNavigateToDetail(lifecycleTab === 'quotes' ? 'quote-detail' : lifecycleTab === 'acknowledgments' ? 'ack-detail' : 'order-detail'); }}
+                                                                            onClick={(e) => { e.stopPropagation(); setPreviewDoc(transactionToOcrDoc(order, lifecycleTab)); }}
                                                                             className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                                                                            title="Preview Document"
                                                                         >
                                                                             <DocumentTextIcon className="h-4 w-4" />
                                                                         </button>
@@ -2638,17 +2661,7 @@ export default function Transactions({ onLogout, onNavigateToDetail, onNavigateT
                                                                                     {lifecycleTab === 'acknowledgments' && (order as any).tag ? (order as any).tag : order.status}
                                                                                 </span>
                                                                                 <button
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        setPreviewDoc({
-                                                                                            id: order.id,
-                                                                                            name: lifecycleTab === 'acknowledgments' ? `${order.id.replace('Acknowledgement-', 'ACK-')}_${(order as any).vendor}.pdf` : `${order.id.replace('#', '')}_PO.pdf`,
-                                                                                            vendor: (order as any).vendor || (order as any).customer,
-                                                                                            type: lifecycleTab === 'acknowledgments' ? 'Acknowledgment' : 'Purchase Order',
-                                                                                            fields: lifecycleTab === 'acknowledgments' ? 35 : 50,
-                                                                                            confidence: 96
-                                                                                        });
-                                                                                    }}
+                                                                                    onClick={(e) => { e.stopPropagation(); setPreviewDoc(transactionToOcrDoc(order, lifecycleTab)); }}
                                                                                     className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                                                                                     title="Preview Document"
                                                                                 >
@@ -2659,13 +2672,6 @@ export default function Transactions({ onLogout, onNavigateToDetail, onNavigateT
                                                                                     className="text-xs font-bold text-zinc-800 bg-primary hover:bg-primary/90 px-3 py-1.5 rounded-md transition-shadow shadow-sm"
                                                                                 >
                                                                                     {expandedIds.has(order.id) ? 'Close' : 'Details'}
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={(e) => { e.stopPropagation(); onNavigateToDetail(lifecycleTab === 'quotes' ? 'quote-detail' : lifecycleTab === 'acknowledgments' ? 'ack-detail' : 'order-detail'); }}
-                                                                                    className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                                                                                    title="View Full Details"
-                                                                                >
-                                                                                    <ArrowRightIcon className="h-4 w-4" />
                                                                                 </button>
                                                                             </div>
                                                                         </div>
@@ -3104,7 +3110,7 @@ export default function Transactions({ onLogout, onNavigateToDetail, onNavigateT
             
             <DocumentConversionModal isOpen={isConversionOpen} onClose={() => setIsConversionOpen(false)} mode={conversionMode} triggerToast={triggerToast} />
             <AckReconciliationModal isOpen={isReconciliationOpen} onClose={() => setIsReconciliationOpen(false)} triggerToast={triggerToast} />
-            <DocumentPreviewModal isOpen={!!previewDoc} onClose={() => setPreviewDoc(null)} document={previewDoc} />
+            <DocumentReviewModal isOpen={!!previewDoc} onClose={() => setPreviewDoc(null)} doc={previewDoc} />
 
             {/* Floating Export Bar */}
             {isMultiSelectMode && (

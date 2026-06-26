@@ -4,16 +4,16 @@ import Login from "./Login"
 import OCRTracking from "./OCRTracking"
 import FeedbackBoard from "./FeedbackBoard"
 import Transactions from "./Transactions"
-import OrderDetail from "./OrderDetail"
-import AckDetail from "./AckDetail"
 import Navbar from "./components/Navbar"
 import SessionExpiryModal from "./components/SessionExpiryModal"
 
 // Split note · Catalog/Quote section movida al repo expert-catalog.
 // Para retomar el state previo · `git checkout backup/with-catalog` o
 // `git checkout v-with-catalog-snapshot`.
+// OrderDetail/AckDetail full pages removidos · Transactions ahora usa
+// DocumentReviewModal (de OCR) para todos los previews.
 
-type Page = 'ocr-tracking' | 'feedback' | 'transactions' | 'order-detail' | 'ack-detail'
+type Page = 'ocr-tracking' | 'feedback' | 'transactions'
 
 export interface ConvertedDocument {
   id: string
@@ -68,33 +68,11 @@ function App() {
             />
             <Transactions
               onLogout={handleLogout}
-              onNavigateToDetail={(type: string) => {
-                if (type === 'order-detail') setCurrentPage('order-detail')
-                if (type === 'ack-detail') setCurrentPage('ack-detail')
-              }}
               onNavigateToWorkspace={() => setCurrentPage('transactions')}
               onNavigate={handleNavigate}
               convertedDoc={convertedDoc}
             />
           </>
-        )
-      case 'order-detail':
-        return (
-          <OrderDetail
-            onBack={() => setCurrentPage('transactions')}
-            onLogout={handleLogout}
-            onNavigate={handleNavigate}
-            onNavigateToWorkspace={() => setCurrentPage('transactions')}
-          />
-        )
-      case 'ack-detail':
-        return (
-          <AckDetail
-            onBack={() => setCurrentPage('transactions')}
-            onLogout={handleLogout}
-            onNavigate={handleNavigate}
-            onNavigateToWorkspace={() => setCurrentPage('transactions')}
-          />
         )
       default:
         return (
