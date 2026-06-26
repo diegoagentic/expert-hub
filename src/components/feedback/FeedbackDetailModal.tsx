@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
-import { MessageSquare, Copy, X, UserPlus, Paperclip, FileText, Download, ExternalLink, Clock, Eye, UserCheck, CheckCircle2, Lock, Ban } from 'lucide-react'
+import { MessageSquare, Copy, X, UserPlus, Paperclip, FileText, Download, ExternalLink, Clock, Eye, UserCheck, CheckCircle2, Lock, Ban, Users, ThumbsUp } from 'lucide-react'
 import type { FeedbackItem, FeedbackState, Severity, Category } from '../../FeedbackBoard'
 import { avatarGradient } from '../team/teamMembers'
 
@@ -12,6 +12,12 @@ interface FeedbackDetailModalProps {
     onClose: () => void
     feedback: FeedbackItem | null
     onTransition: (id: string, next: FeedbackState) => void
+    /** FB-07 · total feedbacks en el grupo de duplicates (incluyendo este). 1 = único. */
+    duplicateGroupSize?: number
+    /** FB-07 · count actual de "Me too" votes desde localStorage. */
+    meTooCount?: number
+    /** FB-07 · handler para incrementar el counter. */
+    onMeToo?: () => void
 }
 
 // Status presentation · per Diego decision (Fase B · 2026-06-26) reemplazo
@@ -121,8 +127,14 @@ function nameFromEmail(email: string): string {
     return local.split(/[._-]/).map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ')
 }
 
-export default function FeedbackDetailModal({ isOpen, onClose, feedback, onTransition }: FeedbackDetailModalProps) {
+export default function FeedbackDetailModal({
+    isOpen, onClose, feedback, onTransition,
+    duplicateGroupSize = 1, meTooCount = 0, onMeToo,
+}: FeedbackDetailModalProps) {
     if (!feedback) return null
+
+    const isDuplicate = duplicateGroupSize > 1
+    const totalAffected = duplicateGroupSize + meTooCount
 
     const presentation = statusPresentation(feedback.state)
     const StatusIcon = presentation.icon
@@ -239,6 +251,44 @@ export default function FeedbackDetailModal({ isOpen, onClose, feedback, onTrans
                                             </button>
                                         )}
                                     </Field>
+
+                                    {/* FB-07 · Duplicate / Me-too card · solo cuando hay duplicates o votes */}
+                                    {(isDuplicate || meTooCount > 0) && (
+                                        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-center gap-4">
+                                            <div className="h-10 w-10 rounded-lg bg-card flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                                                <Users className="h-5 w-5" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm font-semibold text-foreground">
+                                                    Affecting {totalAffected} user{totalAffected === 1 ? '' : 's'}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground mt-0.5">
+                                                    {isDuplicate && (
+                                                        <>
+                                                            {duplicateGroupSize} similar report{duplicateGroupSize === 1 ? '' : 's'} grouped by category + description
+                                                            {meTooCount > 0 && ' · '}
+                                                        </>
+                                                    )}
+                                                    {meTooCount > 0 && (
+                                                        <>
+                                                            {meTooCount} "Me too" vote{meTooCount === 1 ? '' : 's'}
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {onMeToo && (
+                                                <button
+                                                    type="button"
+                                                    onClick={onMeToo}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors shrink-0"
+                                                    title="I'm affected by this too"
+                                                >
+                                                    <ThumbsUp className="h-3.5 w-3.5" />
+                                                    Me too
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
 
                                     {/* Attachment card · matches prod layout */}
                                     {feedback.attachment && (

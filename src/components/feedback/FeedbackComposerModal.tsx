@@ -16,6 +16,8 @@ export interface FeedbackContext {
     vendor?: string
     docType?: string
     status?: string
+    /** FB-06b · multi-select batch · cuando varios docs son flagged en una submission. */
+    batchDocIds?: string[]
 }
 
 export interface FeedbackSubmission {
@@ -330,25 +332,37 @@ export default function FeedbackComposerModal({
                                     </div>
 
                                     {/* Auto-attached context · FB-11 · only when context is provided */}
-                                    {context && (context.docId || context.vendor) && (
+                                    {context && (context.docId || context.vendor || (context.batchDocIds && context.batchDocIds.length > 0)) && (
                                         <div className="rounded-lg border border-border bg-muted/30 p-4">
                                             <div className="text-xs font-medium text-muted-foreground mb-2">
-                                                Attached context · linked automatically
+                                                {context.batchDocIds && context.batchDocIds.length > 0
+                                                    ? `Batch context · ${context.batchDocIds.length} documents flagged`
+                                                    : 'Attached context · linked automatically'}
                                             </div>
-                                            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                                                {context.docId && (
-                                                    <><span className="text-muted-foreground">Document</span><span className="text-foreground font-medium">{context.docId}</span></>
-                                                )}
-                                                {context.vendor && (
-                                                    <><span className="text-muted-foreground">Vendor</span><span className="text-foreground font-medium">{context.vendor}</span></>
-                                                )}
-                                                {context.docType && (
-                                                    <><span className="text-muted-foreground">Type</span><span className="text-foreground font-medium">{context.docType}</span></>
-                                                )}
-                                                {context.status && (
-                                                    <><span className="text-muted-foreground">Status</span><span className="text-foreground font-medium">{context.status}</span></>
-                                                )}
-                                            </div>
+                                            {context.batchDocIds && context.batchDocIds.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {context.batchDocIds.map(id => (
+                                                        <span key={id} className="inline-flex items-center px-2 py-0.5 rounded-md bg-card border border-border text-[11px] font-mono text-foreground">
+                                                            {id}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                                                    {context.docId && (
+                                                        <><span className="text-muted-foreground">Document</span><span className="text-foreground font-medium">{context.docId}</span></>
+                                                    )}
+                                                    {context.vendor && (
+                                                        <><span className="text-muted-foreground">Vendor</span><span className="text-foreground font-medium">{context.vendor}</span></>
+                                                    )}
+                                                    {context.docType && (
+                                                        <><span className="text-muted-foreground">Type</span><span className="text-foreground font-medium">{context.docType}</span></>
+                                                    )}
+                                                    {context.status && (
+                                                        <><span className="text-muted-foreground">Status</span><span className="text-foreground font-medium">{context.status}</span></>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 

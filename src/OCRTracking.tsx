@@ -100,12 +100,28 @@ export default function OCRTracking({ onLogout, onNavigate, onConvertDocument }:
     const [searchQuery, setSearchQuery] = useState('')
     const [activeTab, setActiveTab] = useState<'all' | 'identified' | 'capturing' | 'inconsistencies' | 'in_progress' | 'processed' | 'completed' | 'deprecated'>('all')
     const [feedbackContext, setFeedbackContext] = useState<FeedbackContext | null>(null)
+    const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set())
     const { toasts, addToast, dismissToast } = useToast()
     const { selectedTenants } = useTenant()
 
     const handleSendFeedback = (doc: { id: string; vendor: string; type: string; status: string }) => {
         setFeedbackContext({ docId: doc.id, vendor: doc.vendor, docType: doc.type, status: doc.status })
     }
+
+    const toggleDocSelect = (docId: string) => {
+        setSelectedDocIds(prev => {
+            const next = new Set(prev)
+            if (next.has(docId)) next.delete(docId); else next.add(docId)
+            return next
+        })
+    }
+
+    const handleBatchFeedback = () => {
+        if (selectedDocIds.size === 0) return
+        setFeedbackContext({ batchDocIds: Array.from(selectedDocIds) })
+    }
+
+    const clearSelection = () => setSelectedDocIds(new Set())
 
     const handleFeedbackSubmit = (s: FeedbackSubmission) => {
         try {
@@ -422,6 +438,8 @@ export default function OCRTracking({ onLogout, onNavigate, onConvertDocument }:
                                                         onMarkCompleted={() => handleMarkCompleted(doc.id)}
                                                         onPreflightSync={() => handlePreflightSync(doc)}
                                                         onDeprecate={() => openDeprecation(doc)}
+                                                        selected={selectedDocIds.has(doc.id)}
+                                                        onToggleSelect={() => toggleDocSelect(doc.id)}
                                                     />
                                                 ))}
                                                 {docs.length === 0 && (
@@ -569,6 +587,31 @@ export default function OCRTracking({ onLogout, onNavigate, onConvertDocument }:
                     </div>
                 </div>
             </div>
+
+            {/* FB-06b · Floating multi-select action bar · aparece cuando hay docs seleccionados */}
+            {selectedDocIds.size > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 bg-card border border-border rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs">
+                            {selectedDocIds.size}
+                        </span>
+                        <span className="font-medium text-foreground">document{selectedDocIds.size === 1 ? '' : 's'} selected</span>
+                    </div>
+                    <div className="w-px h-6 bg-border" />
+                    <button
+                        onClick={handleBatchFeedback}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+                    >
+                        Send feedback for {selectedDocIds.size}
+                    </button>
+                    <button
+                        onClick={clearSelection}
+                        className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        Clear
+                    </button>
+                </div>
+            )}
 
             {/* Document Review Modal — full prod-style modal with Header Fields + Line Items tabs */}
             <DocumentReviewModal

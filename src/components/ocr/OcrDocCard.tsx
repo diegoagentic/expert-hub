@@ -24,6 +24,9 @@ interface OcrDocCardProps {
     onMarkCompleted: () => void
     onPreflightSync: () => void
     onDeprecate: () => void
+    /** FB-06b · multi-select state · si onToggleSelect provisto, checkbox aparece. */
+    selected?: boolean
+    onToggleSelect?: () => void
 }
 
 // Best-effort relative time. Accepts seed strings ("Today, 2:30 PM",
@@ -45,17 +48,34 @@ function formatRelativeTime(input: string): string {
     return input
 }
 
-export default function OcrDocCard({ doc, onPreview, onMarkCompleted, onPreflightSync, onDeprecate }: OcrDocCardProps) {
+export default function OcrDocCard({ doc, onPreview, onMarkCompleted, onPreflightSync, onDeprecate, selected, onToggleSelect }: OcrDocCardProps) {
     const assignee = getTeamMember(doc.assigneeId)
     // For non-Reconciled/Completed states the 4 icons default to In-Progress mapping
     // (per Diego decision 2026-06-09 — confirm with prod for other states later).
     const isReconciled = doc.status === 'processed' || doc.status === 'completed'
 
     return (
-        <div className="group bg-card border border-border rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+        <div className={`group bg-card border rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden ${
+            selected ? 'border-primary ring-2 ring-primary/30' : 'border-border'
+        }`}>
             <div className="p-4">
                 <div className="flex items-start justify-between gap-2 mb-3">
                     <div className="flex items-start gap-2.5 min-w-0">
+                        {onToggleSelect && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onToggleSelect() }}
+                                className="h-5 w-5 rounded border-2 border-border flex items-center justify-center shrink-0 mt-1.5 transition-colors hover:border-primary"
+                                style={selected ? { backgroundColor: 'hsl(var(--primary))', borderColor: 'hsl(var(--primary))' } : undefined}
+                                title={selected ? 'Deselect' : 'Select for batch feedback'}
+                                aria-label={selected ? 'Deselect document' : 'Select document'}
+                            >
+                                {selected && (
+                                    <svg className="h-3 w-3 text-primary-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                )}
+                            </button>
+                        )}
                         <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
                             <FileText className="h-4 w-4 text-muted-foreground" />
                         </div>
