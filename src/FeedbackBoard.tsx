@@ -36,9 +36,21 @@ export interface FeedbackItem {
     attachment?: FeedbackAttachment
 }
 
+// FB-08a · comment thread · reporter/expert back-and-forth on each feedback.
+export interface FeedbackComment {
+    id: string
+    author: string
+    authorEmail: string
+    initials: string
+    role: 'reporter' | 'expert'
+    body: string
+    createdAt: string  // ISO timestamp
+}
+
 // localStorage key namespace · per Fase A persistence decision (2026-06-26).
 const STATE_OVERRIDES_KEY = 'expert-hub.feedback.stateOverrides'
 const UPVOTES_KEY = 'expert-hub.feedback.upvotes'
+const COMMENTS_KEY = 'expert-hub.feedback.comments'
 
 function loadStateOverrides(): Record<string, FeedbackState> {
     try {
@@ -61,6 +73,42 @@ function loadUpvotes(): Record<string, number> {
 
 function saveUpvotes(votes: Record<string, number>) {
     try { localStorage.setItem(UPVOTES_KEY, JSON.stringify(votes)) } catch {}
+}
+
+// FB-08a · comments per feedback id · seed data se conserva via merge ·
+// localStorage overrides los seeds para que el QA persista entre refresh.
+function loadComments(): Record<string, FeedbackComment[]> {
+    try {
+        const raw = localStorage.getItem(COMMENTS_KEY)
+        return raw ? JSON.parse(raw) : {}
+    } catch { return {} }
+}
+
+function saveComments(comments: Record<string, FeedbackComment[]>) {
+    try { localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments)) } catch {}
+}
+
+// Seed comments para demos · merged sobre lo persistido al primer load.
+const SEED_COMMENTS: Record<string, FeedbackComment[]> = {
+    'FB-7384D028': [
+        { id: 'c1', author: 'Reynier Rivero', authorEmail: 'reynier.rivero@agenticdream.com', initials: 'RR', role: 'reporter',
+          body: 'Hey Diego, this is one feedback. Saw the ACK comes back without line items when the vendor uses scanned PDFs.',
+          createdAt: '2026-06-26T13:18:30.000Z' },
+        { id: 'c2', author: 'Diego Zuluaga', authorEmail: 'diego.zuluaga@agenticdream.com', initials: 'DZ', role: 'expert',
+          body: 'Got it, looking into the parser logs. Can you share which vendor specifically?',
+          createdAt: '2026-06-26T13:22:10.000Z' },
+        { id: 'c3', author: 'Reynier Rivero', authorEmail: 'reynier.rivero@agenticdream.com', initials: 'RR', role: 'reporter',
+          body: 'Mostly Magnuson · happens on multi-page quotes. Attached the PDF that reproduces it.',
+          createdAt: '2026-06-26T13:27:45.000Z' },
+    ],
+    'FB-1042': [
+        { id: 'c1', author: 'R. Ramirez', authorEmail: 'r.ramirez@special-t.com', initials: 'RR', role: 'reporter',
+          body: 'Line items not extracting from multi-page Magnuson quotes. Tried 3 different files.',
+          createdAt: '2026-06-12T09:14:00.000Z' },
+        { id: 'c2', author: 'Marcus Webb', authorEmail: 'marcus.webb@strata.com', initials: 'MW', role: 'expert',
+          body: 'Triaged · this looks like the OCR multi-page pagination bug. Picked up JIRA OCR-318 for the fix.',
+          createdAt: '2026-06-12T14:20:00.000Z' },
+    ],
 }
 
 // FB-07 · group duplicates por (category + description normalized) · descriptions
@@ -249,10 +297,18 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
     const [query, setQuery] = useState('')
     const [stateOverrides, setStateOverrides] = useState<Record<string, FeedbackState>>(() => loadStateOverrides())
     const [upvotes, setUpvotes] = useState<Record<string, number>>(() => loadUpvotes())
+    const [comments, setComments] = useState<Record<string, FeedbackComment[]>>(() => {
+        const persisted = loadComments()
+        // Merge seed → persisted (persisted wins per id si ya hay overrides).
+        const merged: Record<string, FeedbackComment[]> = { ...SEED_COMMENTS }
+        for (const [id, list] of Object.entries(persisted)) merged[id] = list
+        return merged
+    })
     const [selectedId, setSelectedId] = useState<string | null>(null)
 
     useEffect(() => { saveStateOverrides(stateOverrides) }, [stateOverrides])
     useEffect(() => { saveUpvotes(upvotes) }, [upvotes])
+    useEffect(() => { saveComments(comments) }, [comments])
 
     // Apply overrides from localStorage on top of seed mock data.
     const items = useMemo<FeedbackItem[]>(() => {
@@ -268,6 +324,19 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
 
     const handleMeToo = (id: string) => {
         setUpvotes(prev => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }))
+    }
+
+    const handleAddComment = (feedbackId: string, body: string, role: 'reporter' | 'expert' = 'expert') => {
+        const author = role === 'expert' ? 'Diego Zuluaga' : 'Reynier Rivero'
+        const email  = role === 'expert' ? 'diego.zuluaga@agenticdream.com' : 'reynier.rivero@agenticdream.com'
+        const initials = role === 'expert' ? 'DZ' : 'RR'
+        const c: FeedbackComment = {
+            id: `c-${Date.now().toString(36)}`,
+            author, authorEmail: email, initials, role,
+            body: body.trim(),
+            createdAt: new Date().toISOString(),
+        }
+        setComments(prev => ({ ...prev, [feedbackId]: [...(prev[feedbackId] ?? []), c] }))
     }
 
     const counts = useMemo(() => {
@@ -493,6 +562,8 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                 duplicateGroupSize={selected ? duplicateGroups[selected.id]?.groupSize ?? 1 : 1}
                 meTooCount={selected ? upvotes[selected.id] ?? 0 : 0}
                 onMeToo={() => selected && handleMeToo(selected.id)}
+                comments={selected ? comments[selected.id] ?? [] : []}
+                onAddComment={(body, role) => selected && handleAddComment(selected.id, body, role)}
             />
         </div>
     )

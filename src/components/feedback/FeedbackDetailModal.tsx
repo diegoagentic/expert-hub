@@ -1,7 +1,7 @@
-import { Fragment } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
-import { MessageSquare, Copy, X, UserPlus, Paperclip, FileText, Download, ExternalLink, Clock, Eye, UserCheck, CheckCircle2, Lock, Ban, Users, ThumbsUp } from 'lucide-react'
-import type { FeedbackItem, FeedbackState, Severity, Category } from '../../FeedbackBoard'
+import { Fragment, useState, useRef, useEffect } from 'react'
+import { Dialog, Transition, Tab } from '@headlessui/react'
+import { MessageSquare, Copy, X, UserPlus, Paperclip, FileText, Download, ExternalLink, Clock, Eye, UserCheck, CheckCircle2, Lock, Ban, Users, ThumbsUp, Send } from 'lucide-react'
+import type { FeedbackItem, FeedbackState, Severity, Category, FeedbackComment } from '../../FeedbackBoard'
 import { avatarGradient } from '../team/teamMembers'
 
 // Ports the Feedback Detail modal from production · dev-strata.orderbahn.com/expert-hub.
@@ -18,6 +18,10 @@ interface FeedbackDetailModalProps {
     meTooCount?: number
     /** FB-07 · handler para incrementar el counter. */
     onMeToo?: () => void
+    /** FB-08a · comment thread del feedback (reporter + expert). */
+    comments?: FeedbackComment[]
+    /** FB-08a · handler para agregar comment · role default expert. */
+    onAddComment?: (body: string, role: 'reporter' | 'expert') => void
 }
 
 // Status presentation · per Diego decision (Fase B · 2026-06-26) reemplazo
@@ -130,6 +134,7 @@ function nameFromEmail(email: string): string {
 export default function FeedbackDetailModal({
     isOpen, onClose, feedback, onTransition,
     duplicateGroupSize = 1, meTooCount = 0, onMeToo,
+    comments = [], onAddComment,
 }: FeedbackDetailModalProps) {
     if (!feedback) return null
 
@@ -207,8 +212,17 @@ export default function FeedbackDetailModal({
                                     </button>
                                 </div>
 
-                                {/* BODY · scrollable field section */}
-                                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+                                {/* TABS · General · Actions · Chat */}
+                                <Tab.Group as="div" className="flex-1 flex flex-col overflow-hidden">
+                                    <Tab.List className="flex items-center gap-1 px-6 border-b border-border shrink-0">
+                                        <TabHeader label="General" />
+                                        <TabHeader label="Actions" />
+                                        <TabHeader label="Chat" count={comments.length} />
+                                    </Tab.List>
+
+                                    <Tab.Panels as={Fragment}>
+                                        {/* === GENERAL · all fields + duplicate card + attachment === */}
+                                        <Tab.Panel className="flex-1 overflow-y-auto px-6 py-5 space-y-5 focus:outline-none">
                                     <Field label="Description">
                                         <p className="text-sm text-foreground">{feedback.description}</p>
                                     </Field>
@@ -325,41 +339,224 @@ export default function FeedbackDetailModal({
                                             </div>
                                         </div>
                                     )}
-                                </div>
+                                        </Tab.Panel>
 
-                                {/* FOOTER · status badge XL prominente (reemplaza step timeline · Fase B) + actions */}
-                                <div className="px-6 py-5 border-t border-border bg-card space-y-4">
-                                    <div className={`flex items-center gap-4 p-4 rounded-xl border ${presentation.bgColor} ${presentation.borderColor}`}>
-                                        <div className={`h-12 w-12 rounded-xl bg-card flex items-center justify-center shrink-0 ${presentation.iconColor}`}>
-                                            <StatusIcon className="h-6 w-6" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status</div>
-                                            <div className={`text-lg font-bold ${presentation.iconColor}`}>{presentation.label}</div>
-                                            <div className="text-xs text-muted-foreground mt-0.5">{presentation.helper}</div>
-                                        </div>
-                                        {actions.length > 0 && (
-                                            <div className="flex items-center gap-2 shrink-0">
-                                                {actions.map(action => (
-                                                    <button
-                                                        key={action.label}
-                                                        type="button"
-                                                        onClick={() => onTransition(feedback.id, action.target)}
-                                                        className="px-3 py-1.5 rounded-lg bg-card border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors shadow-sm"
-                                                    >
-                                                        {action.label}
-                                                    </button>
-                                                ))}
+                                        {/* === ACTIONS · status badge XL + transitions + assignment === */}
+                                        <Tab.Panel className="flex-1 overflow-y-auto px-6 py-5 space-y-5 focus:outline-none">
+                                            <div className={`flex items-start gap-4 p-5 rounded-xl border ${presentation.bgColor} ${presentation.borderColor}`}>
+                                                <div className={`h-14 w-14 rounded-xl bg-card flex items-center justify-center shrink-0 ${presentation.iconColor}`}>
+                                                    <StatusIcon className="h-7 w-7" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Current status</div>
+                                                    <div className={`text-2xl font-bold ${presentation.iconColor}`}>{presentation.label}</div>
+                                                    <div className="text-sm text-muted-foreground mt-1">{presentation.helper}</div>
+                                                </div>
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
+
+                                            <div>
+                                                <div className="text-sm font-semibold text-foreground mb-3">Available transitions</div>
+                                                {actions.length > 0 ? (
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        {actions.map(action => (
+                                                            <button
+                                                                key={action.label}
+                                                                type="button"
+                                                                onClick={() => onTransition(feedback.id, action.target)}
+                                                                className="px-4 py-2 rounded-lg bg-card border border-border text-sm font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-colors shadow-sm"
+                                                            >
+                                                                {action.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-sm text-muted-foreground">No transitions available from this state.</p>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <div className="text-sm font-semibold text-foreground mb-3">Assignment</div>
+                                                {feedback.assignedTo ? (
+                                                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                                                        <div className={`h-9 w-9 rounded-full bg-gradient-to-br ${avatarGradient(feedback.assignedTo.id)} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
+                                                            {feedback.assignedTo.initials}
+                                                        </div>
+                                                        <div className="flex-1 text-sm">
+                                                            <div className="font-semibold text-foreground">{feedback.assignedTo.name}</div>
+                                                            <div className="text-xs text-muted-foreground">Owner</div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <button type="button" className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+                                                        <UserPlus className="h-4 w-4" />
+                                                        Assign owner
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </Tab.Panel>
+
+                                        {/* === CHAT · thread + reply textarea === */}
+                                        <Tab.Panel className="flex-1 flex flex-col focus:outline-none overflow-hidden">
+                                            <ChatThread
+                                                comments={comments}
+                                                reporterName={emailFromHandle(feedback.submittedBy).split('@')[0]}
+                                                onAddComment={onAddComment}
+                                            />
+                                        </Tab.Panel>
+                                    </Tab.Panels>
+                                </Tab.Group>
                             </Dialog.Panel>
                         </Transition.Child>
                     </div>
                 </div>
             </Dialog>
         </Transition>
+    )
+}
+
+function TabHeader({ label, count }: { label: string; count?: number }) {
+    return (
+        <Tab as={Fragment}>
+            {({ selected }) => (
+                <button
+                    className={`relative px-4 py-3 text-sm font-medium transition-colors focus:outline-none flex items-center gap-1.5 ${
+                        selected ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                >
+                    {label}
+                    {typeof count === 'number' && count > 0 && (
+                        <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold ${
+                            selected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                        }`}>
+                            {count}
+                        </span>
+                    )}
+                    {selected && <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />}
+                </button>
+            )}
+        </Tab>
+    )
+}
+
+function ChatThread({
+    comments, reporterName, onAddComment,
+}: {
+    comments: FeedbackComment[]
+    reporterName: string
+    onAddComment?: (body: string, role: 'reporter' | 'expert') => void
+}) {
+    const [draft, setDraft] = useState('')
+    const [role, setRole] = useState<'expert' | 'reporter'>('expert')
+    const scrollRef = useRef<HTMLDivElement>(null)
+
+    // Autoscroll al último mensaje cuando aparecen nuevos.
+    useEffect(() => {
+        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+    }, [comments.length])
+
+    const handleSend = () => {
+        const body = draft.trim()
+        if (!body || !onAddComment) return
+        onAddComment(body, role)
+        setDraft('')
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleSend() }
+    }
+
+    const formatTimestamp = (iso: string): string => {
+        try {
+            const d = new Date(iso)
+            return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+        } catch { return iso }
+    }
+
+    return (
+        <>
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+                {comments.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center mb-3">
+                            <MessageSquare className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <p className="text-sm font-semibold text-foreground">No conversation yet</p>
+                        <p className="text-xs text-muted-foreground mt-1 max-w-xs">Reply below to start the back-and-forth with the reporter.</p>
+                    </div>
+                ) : (
+                    comments.map(c => (
+                        <div key={c.id} className={`flex items-start gap-3 ${c.role === 'expert' ? 'flex-row-reverse' : ''}`}>
+                            <div className={`h-9 w-9 rounded-full bg-gradient-to-br ${avatarGradient(c.initials)} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
+                                {c.initials}
+                            </div>
+                            <div className={`flex-1 max-w-[80%] ${c.role === 'expert' ? 'items-end' : 'items-start'} flex flex-col`}>
+                                <div className={`text-[11px] text-muted-foreground mb-1 ${c.role === 'expert' ? 'text-right' : ''}`}>
+                                    <span className="font-semibold text-foreground">{c.author}</span>
+                                    <span className="mx-1">·</span>
+                                    <span>{c.role === 'expert' ? 'Expert' : 'Reporter'}</span>
+                                    <span className="mx-1">·</span>
+                                    <span>{formatTimestamp(c.createdAt)}</span>
+                                </div>
+                                <div className={`rounded-xl px-3.5 py-2.5 text-sm text-foreground ${
+                                    c.role === 'expert'
+                                        ? 'bg-primary/15 border border-primary/30 rounded-tr-sm'
+                                        : 'bg-muted border border-border rounded-tl-sm'
+                                }`}>
+                                    {c.body}
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {onAddComment && (
+                <div className="px-6 py-4 border-t border-border bg-card space-y-3 shrink-0">
+                    <div className="flex items-center gap-2 text-[11px]">
+                        <span className="text-muted-foreground">Reply as</span>
+                        <div className="flex items-center gap-1 bg-muted rounded-md p-0.5">
+                            <button
+                                type="button"
+                                onClick={() => setRole('expert')}
+                                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                                    role === 'expert' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+                                }`}
+                            >
+                                Expert
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setRole('reporter')}
+                                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
+                                    role === 'reporter' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+                                }`}
+                            >
+                                {reporterName ? `Reporter (${reporterName})` : 'Reporter'}
+                            </button>
+                        </div>
+                    </div>
+                    <div className="flex items-end gap-2">
+                        <textarea
+                            value={draft}
+                            onChange={e => setDraft(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            rows={2}
+                            placeholder="Write a reply…  (Cmd/Ctrl+Enter to send)"
+                            className="flex-1 px-3 py-2 text-sm bg-muted/30 border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                        />
+                        <button
+                            type="button"
+                            onClick={handleSend}
+                            disabled={!draft.trim()}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
+                        >
+                            <Send className="h-4 w-4" />
+                            Send
+                        </button>
+                    </div>
+                </div>
+            )}
+        </>
     )
 }
 
