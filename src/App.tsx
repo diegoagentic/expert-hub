@@ -3,16 +3,17 @@ import { useAuth } from './context/AuthContext'
 import Login from "./Login"
 import OCRTracking from "./OCRTracking"
 import FeedbackBoard from "./FeedbackBoard"
-import CatalogPage from "./catalog/CatalogPage"
 import Transactions from "./Transactions"
 import OrderDetail from "./OrderDetail"
 import AckDetail from "./AckDetail"
 import Navbar from "./components/Navbar"
 import SessionExpiryModal from "./components/SessionExpiryModal"
-import MiniCartDrawer from "./quote/MiniCartDrawer"
-import EditQuoteItemPanel from "./quote/EditQuoteItemPanel"
 
-type Page = 'ocr-tracking' | 'feedback' | 'catalog' | 'transactions' | 'order-detail' | 'ack-detail'
+// Split note · Catalog/Quote section movida al repo expert-catalog.
+// Para retomar el state previo · `git checkout backup/with-catalog` o
+// `git checkout v-with-catalog-snapshot`.
+
+type Page = 'ocr-tracking' | 'feedback' | 'transactions' | 'order-detail' | 'ack-detail'
 
 export interface ConvertedDocument {
   id: string
@@ -56,8 +57,6 @@ function App() {
     switch (currentPage) {
       case 'feedback':
         return <FeedbackBoard onLogout={handleLogout} onNavigate={handleNavigate} />
-      case 'catalog':
-        return <CatalogPage onLogout={handleLogout} onNavigate={handleNavigate} />
       case 'transactions':
         return (
           <>
@@ -116,23 +115,6 @@ function App() {
         onExtend={refreshSession}
         onLogout={handleLogout}
       />
-      {/* Phase 3 Fix #11 · Mini-cart drawer global · slide-in tras Add to Quote.
-          onViewQuote · navega a Catalog y dispara evento para abrir el tab
-          "My Quotes" dentro (Diego: no salir de la sección).
-          Diego polish · FAB + drawer SOLO visible en sección Catalog (no en
-          Feedback/Transactions/OCR · drawer es contextual al catalog). */}
-      {currentPage === 'catalog' && (
-        <MiniCartDrawer
-          onViewQuote={() => {
-            setCurrentPage('catalog')
-            window.dispatchEvent(new CustomEvent('expert-hub:open-quotes'))
-          }}
-        />
-      )}
-      {/* Phase 3 polish · panel global para editar variants de un item del cart.
-          Aparece cuando user click "Edit" en el drawer o en My Quotes detail.
-          También scoped al catalog ya que es relevante solo en ese contexto. */}
-      {currentPage === 'catalog' && <EditQuoteItemPanel />}
     </div>
   )
 }

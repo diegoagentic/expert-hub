@@ -4,22 +4,19 @@ import './index.css'
 import App from './App.tsx'
 import { TenantProvider } from './TenantContext'
 import { AuthProvider } from './context/AuthContext'
-import { QuoteProvider } from './quote/QuoteContext'
 import { ThemeProvider } from 'strata-design-system'
 
-// Phase 3 Fix #8 · QuoteProvider DEBE estar adentro de AuthProvider y
-// TenantProvider porque depende del user activo + del tenant activo para
-// rehidratar el slot del cart correspondiente.
+// Split note · Catalog/Quote movidos al repo expert-catalog (snapshot en
+// branch `backup/with-catalog` y tag `v-with-catalog-snapshot` de este repo).
+// El QuoteProvider vivía aquí porque catálogo lo consumía; ya no aplica.
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
       <TenantProvider>
-        <QuoteProvider>
-          <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-            <App />
-          </ThemeProvider>
-        </QuoteProvider>
+        <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+          <App />
+        </ThemeProvider>
       </TenantProvider>
     </AuthProvider>
   </StrictMode>,
