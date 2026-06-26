@@ -30,7 +30,6 @@ import ComparisonLauncher from './components/comparison/ComparisonLauncher'
 import DocumentReviewModal from './components/ocr/DocumentReviewModal'
 import type { OcrDocCardData } from './components/ocr/OcrDocCard'
 import FeedbackComposerModal, { type FeedbackContext, type FeedbackSubmission } from './components/feedback/FeedbackComposerModal'
-import { useTenant } from './TenantContext'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 function cn(...inputs: (string | undefined | null | false)[]) {
