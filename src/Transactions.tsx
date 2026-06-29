@@ -27,7 +27,6 @@ import DocTypeChip from './components/ocr/DocTypeChip'
 import { avatarGradient } from './components/team/teamMembers'
 import DocumentConversionModal from './components/DocumentConversionModal'
 import AckReconciliationModal from './components/AckReconciliationModal'
-import ComparisonLauncher from './components/comparison/ComparisonLauncher'
 import DocumentReviewModal from './components/ocr/DocumentReviewModal'
 import type { OcrDocCardData } from './components/ocr/OcrDocCard'
 import FeedbackComposerModal, { type FeedbackContext, type FeedbackSubmission } from './components/feedback/FeedbackComposerModal'
@@ -439,7 +438,6 @@ const acksSummaryByPeriod: Record<TimePeriod, Record<string, SummaryItem>> = {
 };
 
 import AcknowledgementUploadModal from './components/AcknowledgementUploadModal'
-import ResolveInconsistencyModal from './components/ResolveDiscrepancyModal'
 
 interface ConvertedDoc {
     id: string;
@@ -730,7 +728,6 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
     const [isConversionOpen, setIsConversionOpen] = useState(false);
     const [conversionMode, setConversionMode] = useState<'quote-to-order' | 'order-to-ack'>('quote-to-order');
     const [isReconciliationOpen, setIsReconciliationOpen] = useState(false);
-    const [compareAckDoc, setCompareAckDoc] = useState<any>(null);
     const [previewDoc, setPreviewDoc] = useState<OcrDocCardData | null>(null);
     const [feedbackContext, setFeedbackContext] = useState<FeedbackContext | null>(null);
     const { selectedTenants } = useTenant();
@@ -911,7 +908,6 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
 
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
     const [trackingOrder, setTrackingOrder] = useState<any>(null)
-    const [resolveAckDoc, setResolveAckDoc] = useState<any>(null)
 
     const toggleExpand = (id: string) => {
         const newExpanded = new Set(expandedIds)
@@ -2446,20 +2442,16 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                                                         >
                                                                             <DocumentTextIcon className="h-4 w-4" />
                                                                         </button>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                if (lifecycleTab === 'acknowledgments') {
-                                                                                    setResolveAckDoc({ id: order.id, name: order.id, vendor: order.vendor || order.client, inconsistencyCount: 3 });
-                                                                                } else {
-                                                                                    setTrackingOrder(order);
-                                                                                }
-                                                                            }}
-                                                                            className="p-1.5 rounded-lg text-muted-foreground hover:text-blue-500 hover:bg-blue-50/50 transition-colors"
-                                                                            title={lifecycleTab === 'acknowledgments' ? 'Resolve Inconsistency' : 'Track Order'}
-                                                                        >
-                                                                            <MapPinIcon className="h-4 w-4" />
-                                                                        </button>
+                                                                        {/* Track Order solo para POs · ACK ya no usa Resolve (se hace en Compare) */}
+                                                                        {lifecycleTab !== 'acknowledgments' && (
+                                                                            <button
+                                                                                onClick={(e) => { e.stopPropagation(); setTrackingOrder(order); }}
+                                                                                className="p-1.5 rounded-lg text-muted-foreground hover:text-blue-500 hover:bg-blue-50/50 transition-colors"
+                                                                                title="Track Order"
+                                                                            >
+                                                                                <MapPinIcon className="h-4 w-4" />
+                                                                            </button>
+                                                                        )}
                                                                         <button
                                                                             onClick={(e) => { e.stopPropagation(); toggleExpand(order.id); }}
                                                                             className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
@@ -2659,32 +2651,9 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                                                             <span className="font-semibold text-foreground truncate ml-2 max-w-[160px]">{lifecycleTab === 'acknowledgments' ? (order as any).relatedPo : (order as any).project}</span>
                                                                         </div>
 
-                                                                        {/* ACK with inconsistency: Resolve button */}
-                                                                        {lifecycleTab === 'acknowledgments' && (order as any).tag && (
-                                                                            <button
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    setResolveAckDoc({ id: order.id, name: order.id, vendor: (order as any).vendor, inconsistencyCount: 3 });
-                                                                                }}
-                                                                                title="Open the resolution flow to handle detected inconsistencies (price mismatch, backorder, substitution) item by item"
-                                                                                className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-zinc-900 bg-brand-300 dark:bg-brand-500 hover:bg-brand-400 dark:hover:bg-brand-600 rounded-lg transition-colors"
-                                                                            >
-                                                                                <ExclamationTriangleIcon className="h-3.5 w-3.5" />
-                                                                                Resolve
-                                                                            </button>
-                                                                        )}
-
-                                                                        {/* Compare ACK vs its PO — moved here from OCR (reconciliation belongs to the transaction stage) */}
-                                                                        {lifecycleTab === 'acknowledgments' && (order as any).relatedPo && (
-                                                                            <button
-                                                                                onClick={(e) => { e.stopPropagation(); setCompareAckDoc(order); }}
-                                                                                title="Open a side-by-side compare of this acknowledgement against its linked purchase order to spot price, quantity, or item differences"
-                                                                                className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg bg-brand-300/30 text-foreground border border-brand-300/50 hover:bg-brand-300/50 dark:bg-brand-500/15 dark:border-brand-500/40 dark:hover:bg-brand-500/25 transition-colors"
-                                                                            >
-                                                                                <ArrowsRightLeftIcon className="h-3.5 w-3.5" />
-                                                                                Compare with PO
-                                                                            </button>
-                                                                        )}
+                                                                        {/* Resolve button removido (Diego ask) · la resolución de discrepancias
+                                                                            ahora ocurre exclusivamente en el flow de Compare with PO ·
+                                                                            ComparisonLauncher es el único entry-point para resolver. */}
 
                                                                         {/* Footer — date left, status + actions right (homologated with OcrDocCard) */}
                                                                         <div className="border-t border-border pt-3 mt-1 flex items-center justify-between">
@@ -2851,9 +2820,7 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                         className="text-lg font-medium leading-6 text-zinc-900 dark:text-white flex justify-between items-center mb-6"
                                     >
                                         <span>
-                                            {lifecycleTab === 'quotes' ? 'Quote Analysis' :
-                                                lifecycleTab === 'acknowledgments' ? 'Inconsistency Resolver' :
-                                                    `Tracking Details - ${trackingOrder?.id}`}
+                                            {lifecycleTab === 'quotes' ? 'Quote Analysis' : `Tracking Details - ${trackingOrder?.id}`}
                                         </span>
                                         <button
                                             onClick={() => setTrackingOrder(null)}
@@ -3126,23 +3093,9 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
 
             <CreateOrderModal isOpen={isCreateOrderOpen} onClose={() => setIsCreateOrderOpen(false)} />
             <AcknowledgementUploadModal isOpen={isAckModalOpen} onClose={() => setIsAckModalOpen(false)} />
-            <ResolveInconsistencyModal isOpen={!!resolveAckDoc} onClose={() => setResolveAckDoc(null)} document={resolveAckDoc} />
+            {/* ResolveInconsistencyModal removido · resolución de discrepancias
+                ACK ↔ PO ahora se hace exclusivamente en ComparisonLauncher (Compare with PO) */}
 
-            {/* PO↔ACK comparison launcher — relocated from OCR; compares an ACK against its PO */}
-            <ComparisonLauncher
-                isOpen={!!compareAckDoc}
-                onClose={() => setCompareAckDoc(null)}
-                poNumber={compareAckDoc?.relatedPo ?? ''}
-                ackId={compareAckDoc ? String(compareAckDoc.id).replace('Acknowledgement-', 'ACK-') : ''}
-                onDecision={(report, action) => {
-                    const t = action === 'REJECT' ? 'error' : action === 'REQUEST_REVIEW' ? 'info' : 'success'
-                    const verb = action === 'ACCEPT' ? 'accepted' : action === 'REJECT' ? 'rejected' : 'flagged for review'
-                    triggerToast('Comparison', `${report.po_number} vs ${report.ack_id} ${verb} (simulated)`, t)
-                }}
-            />
-            <div />
-            <div />
-            
             <DocumentConversionModal isOpen={isConversionOpen} onClose={() => setIsConversionOpen(false)} mode={conversionMode} triggerToast={triggerToast} />
             <AckReconciliationModal isOpen={isReconciliationOpen} onClose={() => setIsReconciliationOpen(false)} triggerToast={triggerToast} />
             <DocumentReviewModal
