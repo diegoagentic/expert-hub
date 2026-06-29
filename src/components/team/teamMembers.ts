@@ -2,7 +2,7 @@ export interface TeamMember {
     id: string
     name: string
     initials: string
-    role: 'Account Manager' | 'Expert Hub' | 'Admin'
+    role: 'Account Manager' | 'Expert Hub' | 'Admin' | 'User' | 'Expert'
     /** Pseudo-online status — only "me" is treated as online for the demo. */
     online?: boolean
 }
@@ -10,15 +10,24 @@ export interface TeamMember {
 // Sentinel for the current logged-in user (shown as "Me" in pickers).
 export const CURRENT_USER_ID = 'me'
 
+// Team list matches production Assign Feedback picker · adds the canonical
+// "me" (Diego Zuluaga) at top + the 4 visible team members from prod.
+// Legacy synthetic members kept for backward-compat con seeds existentes que
+// referencian ids antiguos (marcus, priya, etc).
 export const TEAM_MEMBERS: TeamMember[] = [
-    { id: 'me', name: 'Demo User', initials: 'DU', role: 'Account Manager', online: true },
-    { id: 'sarah', name: 'Sarah Johnson', initials: 'SJ', role: 'Expert Hub' },
-    { id: 'marcus', name: 'Marcus Webb', initials: 'MW', role: 'Expert Hub' },
-    { id: 'priya', name: 'Priya Shah', initials: 'PS', role: 'Expert Hub' },
-    { id: 'daniel', name: 'Daniel Okafor', initials: 'DO', role: 'Expert Hub' },
-    { id: 'elena', name: 'Elena Martínez', initials: 'EM', role: 'Account Manager' },
-    { id: 'noah', name: 'Noah Fischer', initials: 'NF', role: 'Expert Hub' },
-    { id: 'tomas', name: 'Tomás Álvarez', initials: 'TA', role: 'Expert Hub' },
+    { id: 'me',        name: 'Diego Zuluaga',   initials: 'DZ', role: 'Expert', online: true },
+    { id: 'carlos',    name: 'Carlos Cedeno',   initials: 'CC', role: 'User' },
+    { id: 'christian', name: 'Christian Mejia', initials: 'CM', role: 'User' },
+    { id: 'daniela',   name: 'Daniela Puerta',  initials: 'DP', role: 'User' },
+    { id: 'jennifer',  name: 'Jennifer Vargas', initials: 'JV', role: 'User' },
+    // Legacy seeds (referenced by FeedbackBoard mock items)
+    { id: 'sarah',     name: 'Sarah Johnson',   initials: 'SJ', role: 'User' },
+    { id: 'marcus',    name: 'Marcus Webb',     initials: 'MW', role: 'User' },
+    { id: 'priya',     name: 'Priya Shah',      initials: 'PS', role: 'User' },
+    { id: 'daniel',    name: 'Daniel Okafor',   initials: 'DO', role: 'User' },
+    { id: 'elena',     name: 'Elena Martínez',  initials: 'EM', role: 'User' },
+    { id: 'noah',      name: 'Noah Fischer',    initials: 'NF', role: 'User' },
+    { id: 'tomas',     name: 'Tomás Álvarez',   initials: 'TA', role: 'User' },
 ]
 
 export function getTeamMember(id: string | undefined | null): TeamMember | null {

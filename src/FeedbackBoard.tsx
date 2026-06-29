@@ -3,6 +3,8 @@ import { Search, MessageSquare, ExternalLink, Inbox, AlertTriangle, Check, Trash
 import Navbar from './components/Navbar'
 import Breadcrumbs from './components/Breadcrumbs'
 import FeedbackDetailModal from './components/feedback/FeedbackDetailModal'
+import AssignFeedbackModal from './components/feedback/AssignFeedbackModal'
+import { getTeamMember, type TeamMember } from './components/team/teamMembers'
 
 interface FeedbackBoardProps {
     onLogout: () => void
@@ -49,6 +51,7 @@ const STATE_OVERRIDES_KEY = 'expert-hub.feedback.stateOverrides'
 const UPVOTES_KEY = 'expert-hub.feedback.upvotes'
 const COMMENTS_KEY = 'expert-hub.feedback.comments'
 const JIRA_OVERRIDES_KEY = 'expert-hub.feedback.jiraOverrides'
+const ASSIGNED_OVERRIDES_KEY = 'expert-hub.feedback.assignedOverrides'
 const VIEWED_KEY = 'expert-hub.feedback.viewed'
 // Items emitted by the FeedbackComposerModal (OCRTracking / Transactions).
 const SUBMISSIONS_KEY = 'expert-hub.feedback.submissions'
@@ -99,6 +102,19 @@ function loadJiraOverrides(): Record<string, string> {
 
 function saveJiraOverrides(o: Record<string, string>) {
     try { localStorage.setItem(JIRA_OVERRIDES_KEY, JSON.stringify(o)) } catch {}
+}
+
+// Assigned owner overrides · "Assign" picker selects un team member · maps
+// feedback id → member id. Pulled junto con state override en items merge.
+function loadAssignedOverrides(): Record<string, string> {
+    try {
+        const raw = localStorage.getItem(ASSIGNED_OVERRIDES_KEY)
+        return raw ? JSON.parse(raw) : {}
+    } catch { return {} }
+}
+
+function saveAssignedOverrides(o: Record<string, string>) {
+    try { localStorage.setItem(ASSIGNED_OVERRIDES_KEY, JSON.stringify(o)) } catch {}
 }
 
 // Unread tracking · items in `viewed` count as read. "All" tab dual badge
@@ -324,6 +340,7 @@ interface QuickAction {
     label: string         // tooltip · matches prod text exactly
     target?: FeedbackState
     promoteJira?: boolean // FB-04 · sets the jira field on the feedback
+    openAssign?: boolean  // opens the AssignFeedbackModal picker
     colorClass: string
     hoverBgClass: string
 }
@@ -336,7 +353,7 @@ function quickActions(state: FeedbackState, alreadyInJira: boolean): QuickAction
             { icon: CopyIcon,     label: 'Mark Duplicate', target: 'Duplicated', colorClass: 'text-orange-600',       hoverBgClass: 'hover:bg-orange-500/10' },
         ]
         case 'Triaged': return [
-            { icon: UserPlus,     label: 'Assign',         target: 'Assigned',   colorClass: 'text-blue-600',         hoverBgClass: 'hover:bg-blue-500/10' },
+            { icon: UserPlus,     label: 'Assign',         openAssign: true,     colorClass: 'text-blue-600',         hoverBgClass: 'hover:bg-blue-500/10' },
             { icon: Check,        label: 'Resolve',        target: 'Resolved',   colorClass: 'text-green-600',        hoverBgClass: 'hover:bg-green-500/10' },
             { icon: Trash2,       label: 'Drop',           target: 'Dropped',    colorClass: 'text-destructive',      hoverBgClass: 'hover:bg-destructive/10' },
             { icon: CopyIcon,     label: 'Mark Duplicate', target: 'Duplicated', colorClass: 'text-orange-600',       hoverBgClass: 'hover:bg-orange-500/10' },
@@ -420,6 +437,8 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
     const [stateOverrides, setStateOverrides] = useState<Record<string, FeedbackState>>(() => loadStateOverrides())
     const [upvotes, setUpvotes] = useState<Record<string, number>>(() => loadUpvotes())
     const [jiraOverrides, setJiraOverrides] = useState<Record<string, string>>(() => loadJiraOverrides())
+    const [assignedOverrides, setAssignedOverrides] = useState<Record<string, string>>(() => loadAssignedOverrides())
+    const [assignTargetId, setAssignTargetId] = useState<string | null>(null)
     const [viewed, setViewed] = useState<Set<string>>(() => loadViewed(FEEDBACK.map(f => f.id)))
     const [submissions, setSubmissions] = useState<FeedbackItem[]>(() => loadSubmissions())
     const [comments, setComments] = useState<Record<string, FeedbackComment[]>>(() => {
@@ -434,6 +453,7 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
     useEffect(() => { saveStateOverrides(stateOverrides) }, [stateOverrides])
     useEffect(() => { saveUpvotes(upvotes) }, [upvotes])
     useEffect(() => { saveJiraOverrides(jiraOverrides) }, [jiraOverrides])
+    useEffect(() => { saveAssignedOverrides(assignedOverrides) }, [assignedOverrides])
     useEffect(() => { saveViewed(viewed) }, [viewed])
     useEffect(() => { saveComments(comments) }, [comments])
 
@@ -454,9 +474,13 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
             const next = { ...f }
             if (stateOverrides[f.id]) next.state = stateOverrides[f.id]
             if (jiraOverrides[f.id]) next.jira = jiraOverrides[f.id]
+            if (assignedOverrides[f.id]) {
+                const member = getTeamMember(assignedOverrides[f.id])
+                if (member) next.assignedTo = { id: member.id, name: member.name, initials: member.initials }
+            }
             return next
         })
-    }, [stateOverrides, jiraOverrides, submissions])
+    }, [stateOverrides, jiraOverrides, assignedOverrides, submissions])
 
     // FB-07 · group duplicates by (category + description normalized).
     const duplicateGroups = useMemo(() => buildDuplicateGroups(items), [items])
@@ -467,6 +491,20 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
 
     const handleMeToo = (id: string) => {
         setUpvotes(prev => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }))
+    }
+
+    const handleAssign = (member: TeamMember) => {
+        if (!assignTargetId) return
+        setAssignedOverrides(prev => ({ ...prev, [assignTargetId]: member.id }))
+        // Si el feedback está en Submitted/Triaged · advance to Assigned.
+        setStateOverrides(prev => {
+            const current = prev[assignTargetId] ?? items.find(i => i.id === assignTargetId)?.state
+            if (current === 'Submitted' || current === 'Triaged') {
+                return { ...prev, [assignTargetId]: 'Assigned' }
+            }
+            return prev
+        })
+        setAssignTargetId(null)
     }
 
     const handlePromoteJira = (id: string) => {
@@ -715,7 +753,8 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                                                                 key={opt.label}
                                                                 onClick={e => {
                                                                     e.stopPropagation()
-                                                                    if (opt.promoteJira) handlePromoteJira(f.id)
+                                                                    if (opt.openAssign) setAssignTargetId(f.id)
+                                                                    else if (opt.promoteJira) handlePromoteJira(f.id)
                                                                     else if (opt.target) handleTransition(f.id, opt.target)
                                                                 }}
                                                                 title={opt.label}
@@ -748,6 +787,12 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                 onMeToo={() => selected && handleMeToo(selected.id)}
                 comments={selected ? comments[selected.id] ?? [] : []}
                 onAddComment={(body, role) => selected && handleAddComment(selected.id, body, role)}
+            />
+
+            <AssignFeedbackModal
+                isOpen={!!assignTargetId}
+                onClose={() => setAssignTargetId(null)}
+                onAssign={handleAssign}
             />
         </div>
     )
