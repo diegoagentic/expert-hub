@@ -213,16 +213,17 @@ const trackingSteps = [
     { status: 'Customs Hold', date: 'Dec 24, 11:00 AM', location: 'Port of Entry', completed: false, alert: true },
 ]
 
+// Mock data remapeada al ciclo Expert · Received → Pending Review → In Review → Approved.
 const recentOrders = [
-    { id: "#ORD-2055", customer: "AutoManufacture Co.", client: "AutoManufacture Co.", project: "Office Renovation", amount: "$385,000", status: "Order Received", date: "Dec 20, 2025", initials: "AC", statusColor: "bg-zinc-100 text-zinc-600 ring-zinc-500/20", location: "New York" },
-    { id: "#ORD-2054", customer: "TechDealer Solutions", client: "TechDealer Solutions", project: "HQ Upgrade", amount: "$62,500", status: "In Production", date: "Nov 15, 2025", initials: "TS", statusColor: "bg-yellow-50 text-yellow-700 ring-yellow-600/20", location: "London" },
-    { id: "#ORD-2053", customer: "Urban Living Inc.", client: "Urban Living Inc.", project: "Lobby Refresh", amount: "$112,000", status: "Ready to Ship", date: "Oct 30, 2025", initials: "UL", statusColor: "bg-green-50 text-green-700 ring-green-600/20", location: "Austin" },
-    { id: "#ORD-2052", customer: "Global Logistics", client: "Global Logistics", project: "Warehouse Expansion", amount: "$45,000", status: "Delivered", date: "Oct 15, 2025", initials: "GL", statusColor: "bg-zinc-100 text-zinc-500 ring-zinc-400/20", location: "Berlin" },
-    { id: "#ORD-2051", customer: "City Builders", client: "City Builders", project: "City Center", amount: "$120,000", status: "Order Received", date: "Jan 05, 2026", initials: "CB", statusColor: "bg-zinc-100 text-zinc-600 ring-zinc-500/20", location: "New York" },
-    { id: "#ORD-2050", customer: "Modern Homes", client: "Modern Homes", project: "Residential A", amount: "$85,000", status: "Acknowledgement", date: "Jan 02, 2026", initials: "MH", statusColor: "bg-violet-50 text-violet-700 ring-violet-600/20", location: "Austin" },
-    { id: "#ORD-2049", customer: "Coastal Props", client: "Coastal Props", project: "Beach House", amount: "$210,000", status: "In Production", date: "Dec 10, 2025", initials: "CP", statusColor: "bg-yellow-50 text-yellow-700 ring-yellow-600/20", location: "London" },
-    { id: "#ORD-2048", customer: "Valley Homes", client: "Valley Homes", project: "Mountain Retreat", amount: "$95,000", status: "Ready to Ship", date: "Nov 20, 2025", initials: "VH", statusColor: "bg-green-50 text-green-700 ring-green-600/20", location: "Berlin" },
-    { id: "#ORD-2047", customer: "Elite Builders", client: "Elite Builders", project: "Sky V", amount: "$450,000", status: "In Transit", date: "Nov 05, 2025", initials: "EB", statusColor: "bg-orange-50 text-orange-700 ring-orange-600/20", location: "New York" },
+    { id: "#ORD-2055", customer: "AutoManufacture Co.", client: "AutoManufacture Co.", project: "Office Renovation", amount: "$385,000", status: "Received", date: "Dec 20, 2025", initials: "AC", statusColor: "bg-zinc-100 text-zinc-600 ring-zinc-500/20", location: "New York" },
+    { id: "#ORD-2054", customer: "TechDealer Solutions", client: "TechDealer Solutions", project: "HQ Upgrade", amount: "$62,500", status: "Pending Review", date: "Nov 15, 2025", initials: "TS", statusColor: "bg-yellow-50 text-yellow-700 ring-yellow-600/20", location: "London" },
+    { id: "#ORD-2053", customer: "Urban Living Inc.", client: "Urban Living Inc.", project: "Lobby Refresh", amount: "$112,000", status: "In Review", date: "Oct 30, 2025", initials: "UL", statusColor: "bg-blue-50 text-blue-700 ring-blue-600/20", location: "Austin" },
+    { id: "#ORD-2052", customer: "Global Logistics", client: "Global Logistics", project: "Warehouse Expansion", amount: "$45,000", status: "Approved", date: "Oct 15, 2025", initials: "GL", statusColor: "bg-green-50 text-green-700 ring-green-600/20", location: "Berlin" },
+    { id: "#ORD-2051", customer: "City Builders", client: "City Builders", project: "City Center", amount: "$120,000", status: "Received", date: "Jan 05, 2026", initials: "CB", statusColor: "bg-zinc-100 text-zinc-600 ring-zinc-500/20", location: "New York" },
+    { id: "#ORD-2050", customer: "Modern Homes", client: "Modern Homes", project: "Residential A", amount: "$85,000", status: "Pending Review", date: "Jan 02, 2026", initials: "MH", statusColor: "bg-yellow-50 text-yellow-700 ring-yellow-600/20", location: "Austin" },
+    { id: "#ORD-2049", customer: "Coastal Props", client: "Coastal Props", project: "Beach House", amount: "$210,000", status: "In Review", date: "Dec 10, 2025", initials: "CP", statusColor: "bg-blue-50 text-blue-700 ring-blue-600/20", location: "London" },
+    { id: "#ORD-2048", customer: "Valley Homes", client: "Valley Homes", project: "Mountain Retreat", amount: "$95,000", status: "Approved", date: "Nov 20, 2025", initials: "VH", statusColor: "bg-green-50 text-green-700 ring-green-600/20", location: "Berlin" },
+    { id: "#ORD-2047", customer: "Elite Builders", client: "Elite Builders", project: "Sky V", amount: "$450,000", status: "Approved", date: "Nov 05, 2025", initials: "EB", statusColor: "bg-green-50 text-green-700 ring-green-600/20", location: "New York" },
 ]
 
 const recentQuotes = [
@@ -238,43 +239,42 @@ const recentQuotes = [
 // adyacente al STATUS badge. Legacy fields (inconsistency/tag) preservados para
 // que el accordion "Details" siga mostrando context adicional.
 const recentAcknowledgments = [
-    { id: "Acknowledgement-8842", relatedPo: "PO-2026-004", vendor: "AIS Furniture", status: "Pending", subFlag: undefined as string | undefined, date: "Jan 15, 2026", expShipDate: "Feb 28, 2026", inconsistency: "None", tag: null, initials: "AI", statusColor: "bg-amber-50 text-amber-700", location: "Tupelo, MS" },
-    { id: "Acknowledgement-8839", relatedPo: "PO-2026-001", vendor: "Herman Miller", status: "Confirmed", subFlag: undefined as string | undefined, date: "Jan 14, 2026", expShipDate: "Feb 20, 2026", inconsistency: "None", tag: null, initials: "HM", statusColor: "bg-green-50 text-green-700", location: "Zeeland" },
+    { id: "Acknowledgement-8842", relatedPo: "PO-2026-004", vendor: "AIS Furniture", status: "Received", subFlag: undefined as string | undefined, date: "Jan 15, 2026", expShipDate: "Feb 28, 2026", inconsistency: "None", tag: null, initials: "AI", statusColor: "bg-zinc-100 text-zinc-600", location: "Tupelo, MS" },
+    { id: "Acknowledgement-8839", relatedPo: "PO-2026-001", vendor: "Herman Miller", status: "Approved", subFlag: undefined as string | undefined, date: "Jan 14, 2026", expShipDate: "Feb 20, 2026", inconsistency: "None", tag: null, initials: "HM", statusColor: "bg-green-50 text-green-700", location: "Zeeland" },
     { id: "Acknowledgement-8840", relatedPo: "PO-2026-002", vendor: "Steelcase", status: "Discrepancy", subFlag: "price mismatch detected", date: "Jan 13, 2026", expShipDate: "Pending", inconsistency: "Price Mismatch ($500)", tag: "Inconsistency" as const, initials: "SC", statusColor: "bg-red-50 text-red-700", location: "Grand Rapids" },
-    { id: "Acknowledgement-8841", relatedPo: "PO-2026-003", vendor: "Knoll", status: "Partial", subFlag: "backorder detected", date: "Jan 12, 2026", expShipDate: "Mar 01, 2026", inconsistency: "Backordered Items", tag: "Partial" as const, initials: "KN", statusColor: "bg-amber-50 text-amber-700", location: "East Greenville" },
+    { id: "Acknowledgement-8841", relatedPo: "PO-2026-003", vendor: "Knoll", status: "Pending Review", subFlag: "backorder detected", date: "Jan 12, 2026", expShipDate: "Mar 01, 2026", inconsistency: "Backordered Items", tag: "Partial" as const, initials: "KN", statusColor: "bg-yellow-50 text-yellow-700", location: "East Greenville" },
 ]
 
-// Pipeline stages
-// Post-Neocon-review (2026-06-05) canonical · Wendy Marchuck authority.
-// PO tab simplificado a 3 estados pre-fulfillment · Production / Shipped /
-// Delivered se movieron al tab Orders (no implementado acá yet · mock data
-// remapeo los items antiguos al estado más cercano).
-const pipelineStages = ['Order Received', 'In Production', 'Ready to Ship', 'In Transit', 'Delivered']
+// Pipeline stages · adaptado al Expert role (validador, no fulfillment).
+// Inbound-outbound canonical era para dealer/manufacturer · estados de
+// production/shipping (In Production, In Transit, Delivered) son
+// responsabilidad de otros roles. Para Expert · ciclo de validación:
+// Received (llegó) → Pending Review (extraído) → In Review (revisando) → Approved (validado).
+const pipelineStages = ['Received', 'Pending Review', 'In Review', 'Approved']
 const quoteStages = ['Draft', 'Sent', 'Negotiating', 'Approved', 'Lost']
-// Ack funnel taxonomy · 4 estados · alineado con demo-2026-strata, read,
-// UI-Dealer, UI-Manufacturer (la mayoría de proyectos Strata recientes
-// mantienen Discrepancy como columna explícita para items con price
-// mismatch / sub / backorder antes de decidir si parten o se confirman).
-const ackStages = ['Pending', 'Discrepancy', 'Partial', 'Confirmed']
+// Ack funnel · mismo patrón Expert-focused. Discrepancy mantiene su
+// columna explícita (es el momento de decisión del expert sobre items con
+// price mismatch / backorder / substitución). Partial removido · era
+// redundante con Discrepancy (ambos = "items necesitan atención").
+const ackStages = ['Received', 'Pending Review', 'Discrepancy', 'Approved']
 
 // Tooltip descriptions · explican qué significa cada estado del funnel.
 // Mouseover del header de columna muestra estos textos.
 function stateDescription(state: string, tab: 'orders' | 'acknowledgments' | 'quotes'): string {
     if (tab === 'acknowledgments') {
         switch (state) {
-            case 'Pending':     return 'Acknowledgement received from the vendor · awaiting expert review against the linked PO.'
-            case 'Discrepancy': return 'AI detected inconsistencies (price mismatch, substitution, quantity change) · needs expert decision before moving forward.'
-            case 'Partial':     return 'Vendor confirms most items but some have substitutions, backorders, or price changes · accepted with exceptions tracked.'
-            case 'Confirmed':   return 'All items in the acknowledgement match the PO · ready to proceed with shipment tracking.'
+            case 'Received':       return 'Acknowledgement arrived from the vendor · awaiting link to its purchase order before review can start.'
+            case 'Pending Review': return 'ACK linked to PO · queued for the expert to validate fields against the original purchase order.'
+            case 'Discrepancy':    return 'Expert detected inconsistencies (price mismatch, substitution, quantity change) · waiting for a decision to accept, push back, or escalate.'
+            case 'Approved':       return 'Expert validated · all items match the PO (or discrepancies were resolved) · forwarded to fulfillment.'
         }
     }
     if (tab === 'orders') {
         switch (state) {
-            case 'Order Received':  return 'Vendor confirmed the purchase order · production has not started yet.'
-            case 'In Production':   return 'Items are being manufactured at the vendor facility · waiting for production complete signal.'
-            case 'Ready to Ship':   return 'Production complete · waiting for carrier pickup at the vendor warehouse.'
-            case 'In Transit':      return 'Items on the road with the carrier · tracking number active.'
-            case 'Delivered':       return 'Items received at destination · pending dealer confirmation and project install.'
+            case 'Received':       return 'Purchase order arrived from the vendor · pending data extraction by OCR/AI.'
+            case 'Pending Review': return 'Data extracted · queued for the expert to validate fields before forwarding to the dealer.'
+            case 'In Review':      return 'Expert reviewing the PO actively · may have edits in progress or open clarifications with the vendor.'
+            case 'Approved':       return 'Expert validated all fields · PO forwarded to the dealer for fulfillment.'
         }
     }
     if (tab === 'quotes') {
