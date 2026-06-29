@@ -237,7 +237,7 @@ export default function FeedbackDetailModal({
                                             <p className="text-sm text-foreground">{feedback.description}</p>
                                         </div>
 
-                                        {/* META GRID · 2 cols */}
+                                        {/* META GRID · 2 cols · Assigned to encima de Experience */}
                                         <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                                             <CompactField label="Submitted by">
                                                 <div className="flex items-center gap-2">
@@ -249,14 +249,6 @@ export default function FeedbackDetailModal({
                                                         <div className="text-[11px] text-muted-foreground truncate">{submittedByEmail}</div>
                                                     </div>
                                                 </div>
-                                            </CompactField>
-
-                                            <CompactField label="Experience">
-                                                <p className="text-sm text-foreground">{feedback.experience ?? 'expert-hub'}</p>
-                                            </CompactField>
-
-                                            <CompactField label="Submitted at">
-                                                <p className="text-sm text-foreground">{formatTimestamp(feedback.date)}</p>
                                             </CompactField>
 
                                             <CompactField label="Assigned to">
@@ -281,6 +273,33 @@ export default function FeedbackDetailModal({
                                                         Assign
                                                     </button>
                                                 )}
+                                            </CompactField>
+
+                                            <CompactField label="Submitted at">
+                                                <p className="text-sm text-foreground">{formatTimestamp(feedback.date)}</p>
+                                            </CompactField>
+
+                                            <CompactField label="Experience">
+                                                <p className="text-sm text-foreground">{feedback.experience ?? 'expert-hub'}</p>
+                                            </CompactField>
+
+                                            <CompactField label="Jira">
+                                                {feedback.jira ? (
+                                                    <a
+                                                        href={`https://jira.strata.local/browse/${feedback.jira}`}
+                                                        onClick={(e) => e.preventDefault()}
+                                                        className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:underline cursor-pointer"
+                                                    >
+                                                        {feedback.jira}
+                                                        <ExternalLink className="h-3 w-3" />
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-sm text-muted-foreground italic">Not promoted yet</span>
+                                                )}
+                                            </CompactField>
+
+                                            <CompactField label="Feedback ID">
+                                                <span className="text-sm font-mono text-foreground">{feedback.id}</span>
                                             </CompactField>
                                         </div>
 
