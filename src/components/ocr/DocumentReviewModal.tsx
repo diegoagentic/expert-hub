@@ -350,6 +350,18 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
+                                    {onSendFeedback && (
+                                        <button
+                                            onClick={() => onSendFeedback(doc)}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-500/10 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 transition-colors"
+                                            title="Report an issue or share feedback about this document"
+                                        >
+                                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                            </svg>
+                                            Send feedback
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => onDownloadOriginal?.(doc)}
                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-foreground border border-border rounded-lg hover:bg-muted transition-colors"
@@ -625,23 +637,9 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                 )}
                             </div>
 
-                            {/* Footer */}
+                            {/* Footer · Send feedback se movió al header como prominent action */}
                             <div className="border-t border-border px-6 py-4 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-xs text-muted-foreground font-medium">{confidence}% confidence</span>
-                                    {onSendFeedback && doc && (
-                                        <button
-                                            onClick={() => onSendFeedback(doc)}
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                                            title="Send feedback about this document"
-                                        >
-                                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                                            </svg>
-                                            Send feedback
-                                        </button>
-                                    )}
-                                </div>
+                                <span className="text-xs text-muted-foreground font-medium">{confidence}% confidence</span>
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={onClose}
