@@ -245,13 +245,46 @@ const recentAcknowledgments = [
 ]
 
 // Pipeline stages
+// Post-Neocon-review (2026-06-05) canonical · Wendy Marchuck authority.
+// PO tab simplificado a 3 estados pre-fulfillment · Production / Shipped /
+// Delivered se movieron al tab Orders (no implementado acá yet · mock data
+// remapeo los items antiguos al estado más cercano).
 const pipelineStages = ['Order Received', 'In Production', 'Ready to Ship', 'In Transit', 'Delivered']
 const quoteStages = ['Draft', 'Sent', 'Negotiating', 'Approved', 'Lost']
 // Ack funnel taxonomy · canonical 3-stage model post-Neocon-review (2026-06).
-// Authority · Wendy Marchuck > PDF > others. Reducido de 5 a 3 stages para
-// alinear con el modelo mental del operator (esperando manufacturer · con
-// excepciones · aprobado). Excepciones surface como `subFlag` chip por item.
+// Excepciones surface como `subFlag` chip por item · no como estado separado.
 const ackStages = ['Pending', 'Partial', 'Confirmed']
+
+// Tooltip descriptions · explican qué significa cada estado del funnel.
+// Mouseover del header de columna muestra estos textos.
+function stateDescription(state: string, tab: 'orders' | 'acknowledgments' | 'quotes'): string {
+    if (tab === 'acknowledgments') {
+        switch (state) {
+            case 'Pending':   return 'Acknowledgement received from the vendor · awaiting expert review against the linked PO. Subflag chips highlight items that need attention.'
+            case 'Partial':   return 'Vendor confirms most items but some have substitutions, backorders, or price changes that need expert decision before proceeding.'
+            case 'Confirmed': return 'All items in the acknowledgement match the PO · ready to proceed with shipment tracking.'
+        }
+    }
+    if (tab === 'orders') {
+        switch (state) {
+            case 'Order Received':  return 'Vendor confirmed the purchase order · production has not started yet.'
+            case 'In Production':   return 'Items are being manufactured at the vendor facility · waiting for production complete signal.'
+            case 'Ready to Ship':   return 'Production complete · waiting for carrier pickup at the vendor warehouse.'
+            case 'In Transit':      return 'Items on the road with the carrier · tracking number active.'
+            case 'Delivered':       return 'Items received at destination · pending dealer confirmation and project install.'
+        }
+    }
+    if (tab === 'quotes') {
+        switch (state) {
+            case 'Draft':       return 'Quote being prepared · not yet sent to the dealer.'
+            case 'Sent':        return 'Quote delivered to the dealer · awaiting response.'
+            case 'Negotiating': return 'Dealer requested adjustments · quote terms being revised.'
+            case 'Approved':    return 'Dealer accepted the quote · ready to convert into a purchase order.'
+            case 'Lost':        return 'Quote declined or expired · no further action.'
+        }
+    }
+    return ''
+}
 
 
 // Color Mapping for Status Icons
@@ -1409,46 +1442,7 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                                 </div>
                                             )}
 
-                                            {/* Export / Actions menu — groups the former bare icons */}
-                                            {activeTab !== 'metrics' && (
-                                                <Menu as="div" className="relative">
-                                                    <MenuButton className="inline-flex items-center gap-1.5 px-3 py-2 border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors">
-                                                        <ArrowDownTrayIcon className="w-4 h-4" />
-                                                        Export
-                                                        <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
-                                                    </MenuButton>
-                                                    <MenuItems className="absolute right-0 mt-1 w-60 origin-top-right rounded-xl border border-border bg-card shadow-lg p-1 z-20 focus:outline-none">
-                                                        <MenuItem>
-                                                            {({ active }) => (
-                                                                <button onClick={() => setIsMultiSelectMode(true)} className={cn("w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg text-foreground", active && "bg-muted")}>
-                                                                    <DocumentTextIcon className="w-4 h-4 text-muted-foreground" />
-                                                                    Select &amp; Export PDF
-                                                                </button>
-                                                            )}
-                                                        </MenuItem>
-                                                        {lifecycleTab === 'orders' && (
-                                                            <MenuItem>
-                                                                {({ active }) => (
-                                                                    <button onClick={() => handleExportSIF('PO')} className={cn("w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg text-foreground", active && "bg-muted")}>
-                                                                        <ArrowDownTrayIcon className="w-4 h-4 text-muted-foreground" />
-                                                                        Export SIF
-                                                                    </button>
-                                                                )}
-                                                            </MenuItem>
-                                                        )}
-                                                        {lifecycleTab === 'acknowledgments' && (
-                                                            <MenuItem>
-                                                                {({ active }) => (
-                                                                    <button onClick={() => setIsReconciliationOpen(true)} className={cn("w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg text-foreground", active && "bg-muted")}>
-                                                                        <DocumentMagnifyingGlassIcon className="w-4 h-4 text-muted-foreground" />
-                                                                        Reconcile PO vs ACK
-                                                                    </button>
-                                                                )}
-                                                            </MenuItem>
-                                                        )}
-                                                    </MenuItems>
-                                                </Menu>
-                                            )}
+                                            {/* Export menu removido · funcionalidades disponibles desde popovers de cards y multi-select bar */}
                                         </div>
                                     </div>
 
@@ -1495,10 +1489,7 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                             ))}
                                         </div>
 
-                                        {/* Status filter — pushed right */}
-                                        <div className="w-full sm:w-44 sm:ml-auto">
-                                            <Select value={selectedStatus} onChange={setSelectedStatus} options={statuses} />
-                                        </div>
+                                        {/* Status filter removido · ya hay filtrado via Active/Completed/All pills */}
                                     </div>
                                 </div>
                             </div>
@@ -2487,13 +2478,16 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                     </div>
                                 ) : (
                                     /* Pipeline View */
-                                    <div className="flex gap-6 overflow-x-auto pb-2 scale-y-[-1] scrollbar-kanban">
+                                    <div className="flex items-start gap-6 overflow-x-auto pb-2 scale-y-[-1] scrollbar-kanban">
                                         {(lifecycleTab === 'quotes' ? quoteStages : lifecycleTab === 'acknowledgments' ? ackStages : pipelineStages).map((stage) => {
                                             const stageOrders = filteredData.filter((o: any) => o.status === stage);
                                             return (
                                                 <div key={stage} className="min-w-[320px] max-w-[320px] flex-shrink-0 flex flex-col h-full scale-y-[-1] pt-4">
                                                     <div className="flex items-center justify-between mb-4 px-2">
-                                                        <h4 className="font-medium text-foreground flex items-center gap-2">
+                                                        <h4
+                                                            className="font-medium text-foreground flex items-center gap-2 cursor-help"
+                                                            title={stateDescription(stage, lifecycleTab as 'orders' | 'acknowledgments' | 'quotes')}
+                                                        >
                                                             {stage}
                                                             <span className="text-muted-foreground text-xs px-1.5">{stageOrders.length}</span>
                                                         </h4>
@@ -2666,6 +2660,7 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                                                                     e.stopPropagation();
                                                                                     setResolveAckDoc({ id: order.id, name: order.id, vendor: (order as any).vendor, inconsistencyCount: 3 });
                                                                                 }}
+                                                                                title="Open the resolution flow to handle detected inconsistencies (price mismatch, backorder, substitution) item by item"
                                                                                 className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-zinc-900 bg-brand-300 dark:bg-brand-500 hover:bg-brand-400 dark:hover:bg-brand-600 rounded-lg transition-colors"
                                                                             >
                                                                                 <ExclamationTriangleIcon className="h-3.5 w-3.5" />
@@ -2677,7 +2672,7 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                                                         {lifecycleTab === 'acknowledgments' && (order as any).relatedPo && (
                                                                             <button
                                                                                 onClick={(e) => { e.stopPropagation(); setCompareAckDoc(order); }}
-                                                                                title="Compare this acknowledgment against its purchase order"
+                                                                                title="Open a side-by-side compare of this acknowledgement against its linked purchase order to spot price, quantity, or item differences"
                                                                                 className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg bg-brand-300/30 text-foreground border border-brand-300/50 hover:bg-brand-300/50 dark:bg-brand-500/15 dark:border-brand-500/40 dark:hover:bg-brand-500/25 transition-colors"
                                                                             >
                                                                                 <ArrowsRightLeftIcon className="h-3.5 w-3.5" />
@@ -2705,12 +2700,7 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                                                                 >
                                                                                     <DocumentTextIcon className="h-4 w-4" />
                                                                                 </button>
-                                                                                <button
-                                                                                    onClick={(e) => { e.stopPropagation(); toggleExpand(order.id); }}
-                                                                                    className="text-xs font-bold text-zinc-800 bg-primary hover:bg-primary/90 px-3 py-1.5 rounded-md transition-shadow shadow-sm"
-                                                                                >
-                                                                                    {expandedIds.has(order.id) ? 'Close' : 'Details'}
-                                                                                </button>
+                                                                                {/* Details button removido · row click sigue abriendo el accordion */}
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -2746,6 +2736,7 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                                                                 <div className="pt-2">
                                                                                     <button
                                                                                         onClick={(e) => { e.stopPropagation(); setIsReconciliationOpen(true); }}
+                                                                                        title="Mark all items as reviewed and accept this acknowledgement as final · moves the transaction forward to the next stage"
                                                                                         className="w-full py-3 text-sm font-bold text-zinc-950 bg-brand-400 hover:bg-brand-300 rounded-lg shadow-sm hover:shadow transition-all flex items-center justify-center gap-2"
                                                                                     >
                                                                                         <DocumentMagnifyingGlassIcon className="h-4 w-4" />

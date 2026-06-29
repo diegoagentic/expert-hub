@@ -572,7 +572,21 @@ export default function DocumentReviewModal({ isOpen, onClose, doc, onSave, onSe
                                             </div>
                                         </div>
 
-                                        {linkedCount === 0 ? (
+                                        {/* Per stakeholder (Reynier · 29-jun) · el backend solo enlaza los
+                                            documentos cuando pasan por human-in-the-loop y llegan a Reconciled.
+                                            Si el doc no está reconciled · mostrar empty state explicativo. */}
+                                        {doc.status !== 'processed' && doc.status !== 'completed' ? (
+                                            <div className="flex flex-col items-center justify-center text-center border border-dashed border-border rounded-xl py-12 px-6">
+                                                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                                                    <Link2 className="h-5 w-5 text-muted-foreground" />
+                                                </div>
+                                                <p className="text-sm font-semibold text-foreground">Not linked yet</p>
+                                                <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+                                                    Documents are linked automatically once they pass review and reach the <strong>Reconciled</strong> stage.
+                                                    Review the fields and accept this {TYPE_NOUN[doc.type]} to trigger the link.
+                                                </p>
+                                            </div>
+                                        ) : linkedCount === 0 ? (
                                             <div className="flex flex-col items-center justify-center text-center border border-dashed border-border rounded-xl py-12 px-6">
                                                 <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
                                                     <FileText className="h-5 w-5 text-muted-foreground" />
