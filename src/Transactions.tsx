@@ -240,7 +240,7 @@ const recentQuotes = [
 const recentAcknowledgments = [
     { id: "Acknowledgement-8842", relatedPo: "PO-2026-004", vendor: "AIS Furniture", status: "Pending", subFlag: undefined as string | undefined, date: "Jan 15, 2026", expShipDate: "Feb 28, 2026", inconsistency: "None", tag: null, initials: "AI", statusColor: "bg-amber-50 text-amber-700", location: "Tupelo, MS" },
     { id: "Acknowledgement-8839", relatedPo: "PO-2026-001", vendor: "Herman Miller", status: "Confirmed", subFlag: undefined as string | undefined, date: "Jan 14, 2026", expShipDate: "Feb 20, 2026", inconsistency: "None", tag: null, initials: "HM", statusColor: "bg-green-50 text-green-700", location: "Zeeland" },
-    { id: "Acknowledgement-8840", relatedPo: "PO-2026-002", vendor: "Steelcase", status: "Pending", subFlag: "price mismatch detected", date: "Jan 13, 2026", expShipDate: "Pending", inconsistency: "Price Mismatch ($500)", tag: "Inconsistency" as const, initials: "SC", statusColor: "bg-amber-50 text-amber-700", location: "Grand Rapids" },
+    { id: "Acknowledgement-8840", relatedPo: "PO-2026-002", vendor: "Steelcase", status: "Discrepancy", subFlag: "price mismatch detected", date: "Jan 13, 2026", expShipDate: "Pending", inconsistency: "Price Mismatch ($500)", tag: "Inconsistency" as const, initials: "SC", statusColor: "bg-red-50 text-red-700", location: "Grand Rapids" },
     { id: "Acknowledgement-8841", relatedPo: "PO-2026-003", vendor: "Knoll", status: "Partial", subFlag: "backorder detected", date: "Jan 12, 2026", expShipDate: "Mar 01, 2026", inconsistency: "Backordered Items", tag: "Partial" as const, initials: "KN", statusColor: "bg-amber-50 text-amber-700", location: "East Greenville" },
 ]
 
@@ -251,18 +251,21 @@ const recentAcknowledgments = [
 // remapeo los items antiguos al estado más cercano).
 const pipelineStages = ['Order Received', 'In Production', 'Ready to Ship', 'In Transit', 'Delivered']
 const quoteStages = ['Draft', 'Sent', 'Negotiating', 'Approved', 'Lost']
-// Ack funnel taxonomy · canonical 3-stage model post-Neocon-review (2026-06).
-// Excepciones surface como `subFlag` chip por item · no como estado separado.
-const ackStages = ['Pending', 'Partial', 'Confirmed']
+// Ack funnel taxonomy · 4 estados · alineado con demo-2026-strata, read,
+// UI-Dealer, UI-Manufacturer (la mayoría de proyectos Strata recientes
+// mantienen Discrepancy como columna explícita para items con price
+// mismatch / sub / backorder antes de decidir si parten o se confirman).
+const ackStages = ['Pending', 'Discrepancy', 'Partial', 'Confirmed']
 
 // Tooltip descriptions · explican qué significa cada estado del funnel.
 // Mouseover del header de columna muestra estos textos.
 function stateDescription(state: string, tab: 'orders' | 'acknowledgments' | 'quotes'): string {
     if (tab === 'acknowledgments') {
         switch (state) {
-            case 'Pending':   return 'Acknowledgement received from the vendor · awaiting expert review against the linked PO. Subflag chips highlight items that need attention.'
-            case 'Partial':   return 'Vendor confirms most items but some have substitutions, backorders, or price changes that need expert decision before proceeding.'
-            case 'Confirmed': return 'All items in the acknowledgement match the PO · ready to proceed with shipment tracking.'
+            case 'Pending':     return 'Acknowledgement received from the vendor · awaiting expert review against the linked PO.'
+            case 'Discrepancy': return 'AI detected inconsistencies (price mismatch, substitution, quantity change) · needs expert decision before moving forward.'
+            case 'Partial':     return 'Vendor confirms most items but some have substitutions, backorders, or price changes · accepted with exceptions tracked.'
+            case 'Confirmed':   return 'All items in the acknowledgement match the PO · ready to proceed with shipment tracking.'
         }
     }
     if (tab === 'orders') {
@@ -2477,8 +2480,8 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                         </div>
                                     </div>
                                 ) : (
-                                    /* Pipeline View */
-                                    <div className="flex items-start gap-6 overflow-x-auto pb-2 scale-y-[-1] scrollbar-kanban">
+                                    /* Pipeline View · items-end porque scale-y-[-1] invierte el eje · "end" en flipped space = visual top */
+                                    <div className="flex items-end gap-6 overflow-x-auto pb-2 scale-y-[-1] scrollbar-kanban">
                                         {(lifecycleTab === 'quotes' ? quoteStages : lifecycleTab === 'acknowledgments' ? ackStages : pipelineStages).map((stage) => {
                                             const stageOrders = filteredData.filter((o: any) => o.status === stage);
                                             return (
