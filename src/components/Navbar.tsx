@@ -139,14 +139,6 @@ export default function Navbar({ onLogout, activeTab = 'OCR', onNavigate }: Navb
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-1 shrink-0">
-                        {/* Chat / Assistant */}
-                        <button
-                            className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
-                            title="Assistant"
-                        >
-                            <MessageSquare className="w-4 h-4" />
-                        </button>
-
                         {/* Bell */}
                         <button
                             className="flex items-center justify-center h-9 w-9 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
