@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from 'strata-design-system'
 import { useTenant } from '../TenantContext'
-import { ScanEye, MessageSquare, Bell, Moon, Sun, LogOut, ChevronDown, Building2, Check, KeyRound, Receipt } from 'lucide-react'
+import { ScanEye, MessageSquare, Bell, Moon, Sun, LogOut, ChevronDown, Building2, Check, KeyRound, Receipt, GitCompare } from 'lucide-react'
 import logoLightBrand from '../assets/logo-light-brand.png'
 import logoDarkBrand from '../assets/logo-dark-brand.png'
 import ChangePasswordModal from './auth/ChangePasswordModal'
@@ -40,6 +40,7 @@ export default function Navbar({ onLogout, activeTab = 'OCR', onNavigate }: Navb
     const tabs: { name: string; label: string; page: string; icon: any; hidden?: boolean }[] = [
         { name: 'OCR', label: 'OCR Tracking', page: 'ocr-tracking', icon: ScanEye },
         { name: 'Transactions', label: 'Transactions', page: 'transactions', icon: Receipt },
+        { name: 'Comparisons', label: 'Comparisons', page: 'comparisons', icon: GitCompare },
         { name: 'Feedback', label: 'Feedback', page: 'feedback', icon: MessageSquare },
     ]
     const visibleTabs = tabs.filter(t => !t.hidden)

@@ -4,6 +4,7 @@ import Login from "./Login"
 import OCRTracking from "./OCRTracking"
 import FeedbackBoard from "./FeedbackBoard"
 import Transactions from "./Transactions"
+import Comparisons from "./Comparisons"
 import Navbar from "./components/Navbar"
 import SessionExpiryModal from "./components/SessionExpiryModal"
 
@@ -13,7 +14,7 @@ import SessionExpiryModal from "./components/SessionExpiryModal"
 // OrderDetail/AckDetail full pages removidos · Transactions ahora usa
 // DocumentReviewModal (de OCR) para todos los previews.
 
-type Page = 'ocr-tracking' | 'feedback' | 'transactions'
+type Page = 'ocr-tracking' | 'feedback' | 'transactions' | 'comparisons'
 
 export interface ConvertedDocument {
   id: string
@@ -57,6 +58,8 @@ function App() {
     switch (currentPage) {
       case 'feedback':
         return <FeedbackBoard onLogout={handleLogout} onNavigate={handleNavigate} />
+      case 'comparisons':
+        return <Comparisons onLogout={handleLogout} onNavigate={handleNavigate} />
       case 'transactions':
         return (
           <>

@@ -1291,7 +1291,6 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                     <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Quick Actions:</span>
                                     {[
                                         { icon: <PlusIcon className="w-5 h-5" />, label: "Create PO", action: () => setIsCreateOrderOpen(true) },
-                                        { icon: <ClipboardDocumentCheckIcon className="w-5 h-5" />, label: "Compare PO vs ACK", action: () => { setLifecycleTab('acknowledgments'); triggerToast('Compare Mode', 'Select an Acknowledgement to compare against this PO', 'info'); } },
                                         { icon: <DocumentTextIcon className="w-5 h-5" />, label: "Export PDF", action: () => setIsMultiSelectMode(!isMultiSelectMode) },
                                         { icon: <ArrowDownTrayIcon className="w-5 h-5" />, label: "Export SIF", action: () => handleExportSIF('PO') },
                                     ].map((action, i) => (
