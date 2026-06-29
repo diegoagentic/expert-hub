@@ -112,12 +112,14 @@ export default function OcrDocCard({ doc, onPreview, onMarkCompleted, onPrefligh
                 </div>
 
                 {/* Compare linked documents · solo Reviewed (post human review) ·
-                    aplica a Purchase Order y Acknowledgment per stakeholder Reynier. */}
+                    aplica a Purchase Order y Acknowledgment per stakeholder Reynier.
+                    Color alineado con "Compare with PO" de Transactions (brand-300
+                    lime DS · only as background per DS rule) para consistencia. */}
                 {isReconciled && onCompareLinked && (doc.type === 'Purchase Order' || doc.type === 'Acknowledgment') && (
                     <button
                         onClick={(e) => { e.stopPropagation(); onCompareLinked() }}
                         title="Compare this document against its linked counterpart (PO ↔ ACK)"
-                        className="mb-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary/15 hover:bg-primary/25 border border-primary/30 px-3 py-2 text-xs font-bold text-foreground transition-colors"
+                        className="mb-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand-300/30 text-foreground border border-brand-300/50 hover:bg-brand-300/50 dark:bg-brand-500/15 dark:border-brand-500/40 dark:hover:bg-brand-500/25 px-3 py-2 text-xs font-bold transition-colors"
                     >
                         <ArrowLeftRight className="h-3.5 w-3.5" />
                         Compare linked documents
