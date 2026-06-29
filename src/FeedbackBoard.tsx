@@ -1,7 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Search, MessageSquare, ExternalLink, MoreHorizontal, Inbox, AlertTriangle, CheckCircle2, Ban, Copy as CopyIcon, RotateCcw, Lock as LockIcon } from 'lucide-react'
-import { Menu, Transition } from '@headlessui/react'
-import { Fragment as ReactFragment } from 'react'
+import { Search, MessageSquare, ExternalLink, Inbox, AlertTriangle, Check, Trash2, Copy as CopyIcon, UserPlus, XCircle, RotateCcw, Filter } from 'lucide-react'
 import Navbar from './components/Navbar'
 import Breadcrumbs from './components/Breadcrumbs'
 import { avatarGradient } from './components/team/teamMembers'
@@ -51,6 +49,10 @@ export interface FeedbackComment {
 const STATE_OVERRIDES_KEY = 'expert-hub.feedback.stateOverrides'
 const UPVOTES_KEY = 'expert-hub.feedback.upvotes'
 const COMMENTS_KEY = 'expert-hub.feedback.comments'
+const JIRA_OVERRIDES_KEY = 'expert-hub.feedback.jiraOverrides'
+const VIEWED_KEY = 'expert-hub.feedback.viewed'
+// Items emitted by the FeedbackComposerModal (OCRTracking / Transactions).
+const SUBMISSIONS_KEY = 'expert-hub.feedback.submissions'
 
 function loadStateOverrides(): Record<string, FeedbackState> {
     try {
@@ -86,6 +88,64 @@ function loadComments(): Record<string, FeedbackComment[]> {
 
 function saveComments(comments: Record<string, FeedbackComment[]>) {
     try { localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments)) } catch {}
+}
+
+// FB-04 · jira overrides · "Promote to Jira" action sets a mock ticket id.
+function loadJiraOverrides(): Record<string, string> {
+    try {
+        const raw = localStorage.getItem(JIRA_OVERRIDES_KEY)
+        return raw ? JSON.parse(raw) : {}
+    } catch { return {} }
+}
+
+function saveJiraOverrides(o: Record<string, string>) {
+    try { localStorage.setItem(JIRA_OVERRIDES_KEY, JSON.stringify(o)) } catch {}
+}
+
+// Unread tracking · items in `viewed` count as read. "All" tab dual badge
+// shows unread (red) + total (gray) per prod layout.
+function loadViewed(): Set<string> {
+    try {
+        const raw = localStorage.getItem(VIEWED_KEY)
+        return raw ? new Set(JSON.parse(raw)) : new Set()
+    } catch { return new Set() }
+}
+
+function saveViewed(s: Set<string>) {
+    try { localStorage.setItem(VIEWED_KEY, JSON.stringify(Array.from(s))) } catch {}
+}
+
+// Reads submissions emitted by the FeedbackComposerModal (OCRTracking +
+// Transactions handlers) y los normaliza a FeedbackItem · permite que aparezcan
+// en el board sin tocar el seed array.
+function loadSubmissions(): FeedbackItem[] {
+    try {
+        const raw = localStorage.getItem(SUBMISSIONS_KEY)
+        if (!raw) return []
+        const arr = JSON.parse(raw) as Array<any>
+        return arr.map((s, idx) => {
+            const created = new Date(s.submittedAt || Date.now() - idx * 60000)
+            // Composer Category set ('Bug'|'Suggestion'|'Data Quality'|'Other') →
+            // Board canonical (Bug | Feature Request | UI/UX | Data | Performance).
+            let cat: Category = 'UI/UX'
+            if (s.category === 'Bug') cat = 'Bug'
+            else if (s.category === 'Suggestion') cat = 'Feature Request'
+            else if (s.category === 'Data Quality') cat = 'Data'
+            // Composer Severity ('Low'|'Medium'|'High') → Board (default Medium).
+            const sev: Severity = (s.severity ?? 'Medium') as Severity
+            const item: FeedbackItem = {
+                id: s.id || `FB-${created.getTime().toString(36).toUpperCase()}`,
+                description: s.description,
+                category: cat,
+                severity: sev,
+                state: 'Submitted',
+                submittedBy: 'diego.zuluaga@agenticdream.com',
+                date: created.toISOString(),
+                experience: s.experience,
+            }
+            return item
+        })
+    } catch { return [] }
 }
 
 // Seed comments para demos · merged sobre lo persistido al primer load.
@@ -249,37 +309,75 @@ function severityClasses(s: Severity): string {
     }
 }
 
-// FB-03 · row actions disponibles según el state actual. Cada action es una
-// transición · misma semántica que el detail modal pero accesible desde el
-// MoreHorizontal de cada row sin abrir el modal.
-interface RowAction { label: string; target: FeedbackState; icon: typeof CheckCircle2 }
-function rowActions(state: FeedbackState): RowAction[] {
+// FB-03 v2 · inline quick action icons per row · matches prod tooltips:
+// Submitted · "Triage" "Drop" "Mark Duplicate"
+// Triaged   · "Assign" "Resolve" "Drop" "Mark Duplicate"
+// Assigned  · "Resolve" "Close" "Promote to Jira"
+// Terminal  · "Reopen"
+interface QuickAction {
+    icon: typeof Check
+    label: string         // tooltip · matches prod text exactly
+    target?: FeedbackState
+    promoteJira?: boolean // FB-04 · sets the jira field on the feedback
+    colorClass: string
+    hoverBgClass: string
+}
+
+function quickActions(state: FeedbackState, alreadyInJira: boolean): QuickAction[] {
     switch (state) {
-        case 'Submitted':  return [
-            { label: 'Mark Triaged',    target: 'Triaged',    icon: CheckCircle2 },
-            { label: 'Mark Dropped',    target: 'Dropped',    icon: Ban },
-            { label: 'Mark Duplicated', target: 'Duplicated', icon: CopyIcon },
+        case 'Submitted': return [
+            { icon: Filter,       label: 'Triage',         target: 'Triaged',    colorClass: 'text-primary',          hoverBgClass: 'hover:bg-primary/10' },
+            { icon: Trash2,       label: 'Drop',           target: 'Dropped',    colorClass: 'text-destructive',      hoverBgClass: 'hover:bg-destructive/10' },
+            { icon: CopyIcon,     label: 'Mark Duplicate', target: 'Duplicated', colorClass: 'text-orange-600',       hoverBgClass: 'hover:bg-orange-500/10' },
         ]
-        case 'Triaged':    return [
-            { label: 'Mark Resolved',   target: 'Resolved',   icon: CheckCircle2 },
-            { label: 'Mark Dropped',    target: 'Dropped',    icon: Ban },
-            { label: 'Mark Duplicated', target: 'Duplicated', icon: CopyIcon },
+        case 'Triaged': return [
+            { icon: UserPlus,     label: 'Assign',         target: 'Assigned',   colorClass: 'text-primary',          hoverBgClass: 'hover:bg-primary/10' },
+            { icon: Check,        label: 'Resolve',        target: 'Resolved',   colorClass: 'text-green-600',        hoverBgClass: 'hover:bg-green-500/10' },
+            { icon: Trash2,       label: 'Drop',           target: 'Dropped',    colorClass: 'text-destructive',      hoverBgClass: 'hover:bg-destructive/10' },
+            { icon: CopyIcon,     label: 'Mark Duplicate', target: 'Duplicated', colorClass: 'text-orange-600',       hoverBgClass: 'hover:bg-orange-500/10' },
         ]
-        case 'Assigned':   return [
-            { label: 'Mark Resolved',   target: 'Resolved',   icon: CheckCircle2 },
-            { label: 'Mark Dropped',    target: 'Dropped',    icon: Ban },
-            { label: 'Mark Duplicated', target: 'Duplicated', icon: CopyIcon },
+        case 'Assigned': return [
+            { icon: Check,        label: 'Resolve',        target: 'Resolved',   colorClass: 'text-green-600',        hoverBgClass: 'hover:bg-green-500/10' },
+            { icon: XCircle,      label: 'Close',          target: 'Closed',     colorClass: 'text-muted-foreground', hoverBgClass: 'hover:bg-muted' },
+            { icon: ExternalLink, label: alreadyInJira ? 'Open Jira' : 'Promote to Jira', promoteJira: true, colorClass: 'text-orange-600', hoverBgClass: 'hover:bg-orange-500/10' },
         ]
-        case 'Resolved':   return [
-            { label: 'Mark Closed',     target: 'Closed',     icon: LockIcon },
-            { label: 'Reopen',          target: 'Submitted',  icon: RotateCcw },
+        case 'Resolved': return [
+            { icon: RotateCcw,    label: 'Reopen',         target: 'Submitted',  colorClass: 'text-blue-600',         hoverBgClass: 'hover:bg-blue-500/10' },
         ]
         case 'Closed':
         case 'Dropped':
         case 'Duplicated': return [
-            { label: 'Reopen',          target: 'Submitted',  icon: RotateCcw },
+            { icon: RotateCcw,    label: 'Reopen',         target: 'Submitted',  colorClass: 'text-blue-600',         hoverBgClass: 'hover:bg-blue-500/10' },
         ]
     }
+}
+
+// Synthetic display name + initials from email for the Submitted By column.
+function displayNameFromEmail(email: string): { name: string; initials: string } {
+    const handle = (email.includes('@') ? email.split('@')[0] : email).replace(/[._-]/g, ' ')
+    const parts = handle.split(' ').filter(Boolean)
+    const name = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ')
+    const initials = parts.slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('') || 'U'
+    return { name: name || email, initials }
+}
+
+// Relative time · accepts ISO timestamps + friendly "Jun 12, 2026" seeds.
+function formatRelativeTime(input: string): string {
+    if (!input) return '—'
+    const parsed = new Date(input)
+    if (isNaN(parsed.getTime())) return input
+    const diffMs = Date.now() - parsed.getTime()
+    if (diffMs < 0) return 'just now'
+    const minutes = Math.floor(diffMs / 60_000)
+    if (minutes < 1) return 'just now'
+    if (minutes < 60) return `${minutes}m ago`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours}h ago`
+    const days = Math.floor(hours / 24)
+    if (days < 30) return `${days}d ago`
+    const months = Math.floor(days / 30)
+    if (months < 12) return `${months}mo ago`
+    return parsed.toLocaleDateString()
 }
 
 function stateClasses(s: FeedbackState): string {
@@ -297,6 +395,9 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
     const [query, setQuery] = useState('')
     const [stateOverrides, setStateOverrides] = useState<Record<string, FeedbackState>>(() => loadStateOverrides())
     const [upvotes, setUpvotes] = useState<Record<string, number>>(() => loadUpvotes())
+    const [jiraOverrides, setJiraOverrides] = useState<Record<string, string>>(() => loadJiraOverrides())
+    const [viewed, setViewed] = useState<Set<string>>(() => loadViewed())
+    const [submissions, setSubmissions] = useState<FeedbackItem[]>(() => loadSubmissions())
     const [comments, setComments] = useState<Record<string, FeedbackComment[]>>(() => {
         const persisted = loadComments()
         // Merge seed → persisted (persisted wins per id si ya hay overrides).
@@ -308,12 +409,30 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
 
     useEffect(() => { saveStateOverrides(stateOverrides) }, [stateOverrides])
     useEffect(() => { saveUpvotes(upvotes) }, [upvotes])
+    useEffect(() => { saveJiraOverrides(jiraOverrides) }, [jiraOverrides])
+    useEffect(() => { saveViewed(viewed) }, [viewed])
     useEffect(() => { saveComments(comments) }, [comments])
 
-    // Apply overrides from localStorage on top of seed mock data.
+    // Re-load submissions on storage events · permite que el board se actualice
+    // cuando el composer del otro tab/page hace submit en la misma session.
+    useEffect(() => {
+        const onStorage = (e: StorageEvent) => {
+            if (e.key === SUBMISSIONS_KEY) setSubmissions(loadSubmissions())
+        }
+        window.addEventListener('storage', onStorage)
+        return () => window.removeEventListener('storage', onStorage)
+    }, [])
+
+    // Apply overrides from localStorage on top of seed + submitted items.
     const items = useMemo<FeedbackItem[]>(() => {
-        return FEEDBACK.map(f => stateOverrides[f.id] ? { ...f, state: stateOverrides[f.id] } : f)
-    }, [stateOverrides])
+        const base = [...submissions, ...FEEDBACK]
+        return base.map(f => {
+            const next = { ...f }
+            if (stateOverrides[f.id]) next.state = stateOverrides[f.id]
+            if (jiraOverrides[f.id]) next.jira = jiraOverrides[f.id]
+            return next
+        })
+    }, [stateOverrides, jiraOverrides, submissions])
 
     // FB-07 · group duplicates by (category + description normalized).
     const duplicateGroups = useMemo(() => buildDuplicateGroups(items), [items])
@@ -324,6 +443,19 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
 
     const handleMeToo = (id: string) => {
         setUpvotes(prev => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }))
+    }
+
+    const handlePromoteJira = (id: string) => {
+        setJiraOverrides(prev => {
+            if (prev[id]) return prev // ya promovido · no-op
+            // Mock ticket id · prefix STRATA + sequential idx based on existing count.
+            const next = { ...prev, [id]: `STRATA-${1000 + Object.keys(prev).length + 1}` }
+            return next
+        })
+    }
+
+    const markViewed = (id: string) => {
+        setViewed(prev => prev.has(id) ? prev : new Set(prev).add(id))
     }
 
     const handleAddComment = (feedbackId: string, body: string, role: 'reporter' | 'expert' = 'expert') => {
@@ -339,6 +471,7 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
         setComments(prev => ({ ...prev, [feedbackId]: [...(prev[feedbackId] ?? []), c] }))
     }
 
+    // Per-tab total counts.
     const counts = useMemo(() => {
         const c: Record<string, number> = {
             all: items.length,
@@ -347,6 +480,18 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
         for (const f of items) c[f.state] = (c[f.state] ?? 0) + 1
         return c
     }, [items])
+
+    // Unread per tab · counted only when at least one matching item is unread.
+    const unread = useMemo(() => {
+        const u: Record<string, number> = { all: 0, jira: 0 }
+        for (const f of items) {
+            if (viewed.has(f.id)) continue
+            u.all += 1
+            if (f.jira) u.jira += 1
+            u[f.state] = (u[f.state] ?? 0) + 1
+        }
+        return u
+    }, [items, viewed])
 
     const filtered = useMemo(() => {
         return items.filter(f => {
@@ -388,24 +533,34 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                                 </h3>
                                 {/* Funnel */}
                                 <div className="flex gap-1 bg-muted p-1 rounded-lg w-fit overflow-x-auto max-w-full">
-                                    {FUNNEL.map(tab => (
-                                        <button
-                                            key={tab.id}
-                                            onClick={() => setActiveTab(tab.id)}
-                                            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-2 outline-none whitespace-nowrap ${
-                                                activeTab === tab.id
-                                                    ? 'bg-primary text-primary-foreground shadow-sm'
-                                                    : 'text-muted-foreground hover:text-foreground hover:bg-background/60'
-                                            }`}
-                                        >
-                                            {tab.label}
-                                            <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                                                activeTab === tab.id ? 'bg-primary-foreground/20' : 'bg-background'
-                                            }`}>
-                                                {counts[tab.id] ?? 0}
-                                            </span>
-                                        </button>
-                                    ))}
+                                    {FUNNEL.map(tab => {
+                                        const unreadCount = unread[tab.id] ?? 0
+                                        const totalCount = counts[tab.id] ?? 0
+                                        const isActive = activeTab === tab.id
+                                        return (
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => setActiveTab(tab.id)}
+                                                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 outline-none whitespace-nowrap ${
+                                                    isActive
+                                                        ? 'bg-primary text-primary-foreground shadow-sm'
+                                                        : 'text-muted-foreground hover:text-foreground hover:bg-background/60'
+                                                }`}
+                                            >
+                                                {tab.label}
+                                                {unreadCount > 0 && (
+                                                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold bg-destructive text-destructive-foreground">
+                                                        {unreadCount}
+                                                    </span>
+                                                )}
+                                                <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold ${
+                                                    isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-background text-muted-foreground'
+                                                }`}>
+                                                    {totalCount}
+                                                </span>
+                                            </button>
+                                        )
+                                    })}
                                 </div>
                             </div>
 
@@ -447,11 +602,15 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filtered.map(f => (
+                                    {filtered.map(f => {
+                                        const submitter = displayNameFromEmail(f.submittedBy)
+                                        const isUnread = !viewed.has(f.id)
+                                        const rowActions = quickActions(f.state, !!f.jira)
+                                        return (
                                         <tr
                                             key={f.id}
-                                            onClick={() => setSelectedId(f.id)}
-                                            className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors cursor-pointer"
+                                            onClick={() => { setSelectedId(f.id); markViewed(f.id) }}
+                                            className={`border-b border-border last:border-0 hover:bg-muted/40 transition-colors cursor-pointer ${isUnread ? 'bg-blue-500/5' : ''}`}
                                         >
                                             <td className="px-4 py-3 max-w-md">
                                                 <div className="font-medium text-foreground flex items-start gap-2">
@@ -498,8 +657,18 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                                                     <span className="text-muted-foreground">—</span>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{f.submittedBy}</td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{f.date}</td>
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <div className="flex items-center gap-2">
+                                                    <div
+                                                        title={f.submittedBy}
+                                                        className={`h-7 w-7 rounded-full bg-gradient-to-br ${avatarGradient(submitter.initials)} flex items-center justify-center text-[10px] font-bold text-white shrink-0`}
+                                                    >
+                                                        {submitter.initials}
+                                                    </div>
+                                                    <span className="text-foreground">{submitter.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{formatRelativeTime(f.date)}</td>
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 {f.jira ? (
                                                     <a
@@ -514,39 +683,30 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                                                 )}
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap">
-                                                <Menu as="div" className="relative inline-block text-left">
-                                                    <Menu.Button
-                                                        onClick={e => e.stopPropagation()}
-                                                        className="h-8 w-8 rounded-lg hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                                                        title="Actions"
-                                                        aria-label="Feedback actions"
-                                                    >
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Menu.Button>
-                                                    <Transition as={ReactFragment} enter="transition ease-out duration-100" enterFrom="transform opacity-0 scale-95" enterTo="transform opacity-100 scale-100" leave="transition ease-in duration-75" leaveFrom="transform opacity-100 scale-100" leaveTo="transform opacity-0 scale-95">
-                                                        <Menu.Items
-                                                            onClick={e => e.stopPropagation()}
-                                                            className="absolute right-0 z-40 mt-1 w-48 origin-top-right rounded-lg bg-card border border-border shadow-lg focus:outline-none p-1"
-                                                        >
-                                                            {rowActions(f.state).map(opt => (
-                                                                <Menu.Item key={opt.label}>
-                                                                    {({ active }) => (
-                                                                        <button
-                                                                            onClick={() => handleTransition(f.id, opt.target)}
-                                                                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors ${active ? 'bg-muted text-foreground' : 'text-foreground'}`}
-                                                                        >
-                                                                            <opt.icon className="h-4 w-4 text-muted-foreground" />
-                                                                            {opt.label}
-                                                                        </button>
-                                                                    )}
-                                                                </Menu.Item>
-                                                            ))}
-                                                        </Menu.Items>
-                                                    </Transition>
-                                                </Menu>
+                                                <div className="flex items-center justify-end gap-1">
+                                                    {rowActions.map(opt => {
+                                                        const Icon = opt.icon
+                                                        return (
+                                                            <button
+                                                                key={opt.label}
+                                                                onClick={e => {
+                                                                    e.stopPropagation()
+                                                                    if (opt.promoteJira) handlePromoteJira(f.id)
+                                                                    else if (opt.target) handleTransition(f.id, opt.target)
+                                                                }}
+                                                                title={opt.label}
+                                                                aria-label={opt.label}
+                                                                className={`h-7 w-7 rounded-md flex items-center justify-center transition-colors ${opt.colorClass} ${opt.hoverBgClass}`}
+                                                            >
+                                                                <Icon className="h-4 w-4" />
+                                                            </button>
+                                                        )
+                                                    })}
+                                                </div>
                                             </td>
                                         </tr>
-                                    ))}
+                                        )
+                                    })}
                                 </tbody>
                             </table>
                         </div>
