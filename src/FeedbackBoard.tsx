@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from 'react'
 import { Search, MessageSquare, ExternalLink, Inbox, AlertTriangle, Check, Trash2, Copy as CopyIcon, UserPlus, XCircle, RotateCcw, Filter } from 'lucide-react'
 import Navbar from './components/Navbar'
 import Breadcrumbs from './components/Breadcrumbs'
-import { avatarGradient } from './components/team/teamMembers'
 import FeedbackDetailModal from './components/feedback/FeedbackDetailModal'
 
 interface FeedbackBoardProps {
@@ -103,11 +102,17 @@ function saveJiraOverrides(o: Record<string, string>) {
 }
 
 // Unread tracking · items in `viewed` count as read. "All" tab dual badge
-// shows unread (red) + total (gray) per prod layout.
-function loadViewed(): Set<string> {
+// shows unread (red) + total (gray) per prod layout. First-load init marks
+// all current seed ids as viewed so only NEW items (submitted via composer)
+// surface como unread · matches prod behavior where existing items aren't red.
+function loadViewed(seedIds: string[]): Set<string> {
     try {
         const raw = localStorage.getItem(VIEWED_KEY)
-        return raw ? new Set(JSON.parse(raw)) : new Set()
+        if (raw) return new Set(JSON.parse(raw))
+        // First mount · prime viewed con todos los seeds existentes.
+        const initial = new Set(seedIds)
+        localStorage.setItem(VIEWED_KEY, JSON.stringify(Array.from(initial)))
+        return initial
     } catch { return new Set() }
 }
 
@@ -326,12 +331,12 @@ interface QuickAction {
 function quickActions(state: FeedbackState, alreadyInJira: boolean): QuickAction[] {
     switch (state) {
         case 'Submitted': return [
-            { icon: Filter,       label: 'Triage',         target: 'Triaged',    colorClass: 'text-primary',          hoverBgClass: 'hover:bg-primary/10' },
+            { icon: Filter,       label: 'Triage',         target: 'Triaged',    colorClass: 'text-blue-600',         hoverBgClass: 'hover:bg-blue-500/10' },
             { icon: Trash2,       label: 'Drop',           target: 'Dropped',    colorClass: 'text-destructive',      hoverBgClass: 'hover:bg-destructive/10' },
             { icon: CopyIcon,     label: 'Mark Duplicate', target: 'Duplicated', colorClass: 'text-orange-600',       hoverBgClass: 'hover:bg-orange-500/10' },
         ]
         case 'Triaged': return [
-            { icon: UserPlus,     label: 'Assign',         target: 'Assigned',   colorClass: 'text-primary',          hoverBgClass: 'hover:bg-primary/10' },
+            { icon: UserPlus,     label: 'Assign',         target: 'Assigned',   colorClass: 'text-blue-600',         hoverBgClass: 'hover:bg-blue-500/10' },
             { icon: Check,        label: 'Resolve',        target: 'Resolved',   colorClass: 'text-green-600',        hoverBgClass: 'hover:bg-green-500/10' },
             { icon: Trash2,       label: 'Drop',           target: 'Dropped',    colorClass: 'text-destructive',      hoverBgClass: 'hover:bg-destructive/10' },
             { icon: CopyIcon,     label: 'Mark Duplicate', target: 'Duplicated', colorClass: 'text-orange-600',       hoverBgClass: 'hover:bg-orange-500/10' },
@@ -359,6 +364,25 @@ function displayNameFromEmail(email: string): { name: string; initials: string }
     const name = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ')
     const initials = parts.slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('') || 'U'
     return { name: name || email, initials }
+}
+
+// Avatar bg solid · matches prod (no gradient). Deterministic hash from
+// initials picks one of a curated tone palette (blues + secondaries) so
+// each user keeps a consistent color across refreshes.
+const AVATAR_BG_PALETTE = [
+    'bg-blue-600',
+    'bg-indigo-600',
+    'bg-violet-600',
+    'bg-sky-600',
+    'bg-cyan-600',
+    'bg-rose-500',
+    'bg-amber-500',
+    'bg-emerald-600',
+]
+function solidAvatarColor(seed: string): string {
+    let hash = 0
+    for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0
+    return AVATAR_BG_PALETTE[Math.abs(hash) % AVATAR_BG_PALETTE.length]
 }
 
 // Relative time · accepts ISO timestamps + friendly "Jun 12, 2026" seeds.
@@ -396,7 +420,7 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
     const [stateOverrides, setStateOverrides] = useState<Record<string, FeedbackState>>(() => loadStateOverrides())
     const [upvotes, setUpvotes] = useState<Record<string, number>>(() => loadUpvotes())
     const [jiraOverrides, setJiraOverrides] = useState<Record<string, string>>(() => loadJiraOverrides())
-    const [viewed, setViewed] = useState<Set<string>>(() => loadViewed())
+    const [viewed, setViewed] = useState<Set<string>>(() => loadViewed(FEEDBACK.map(f => f.id)))
     const [submissions, setSubmissions] = useState<FeedbackItem[]>(() => loadSubmissions())
     const [comments, setComments] = useState<Record<string, FeedbackComment[]>>(() => {
         const persisted = loadComments()
@@ -648,7 +672,7 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 {f.assignedTo ? (
                                                     <div className="flex items-center gap-2">
-                                                        <div className={`h-7 w-7 rounded-full bg-gradient-to-br ${avatarGradient(f.assignedTo.id)} flex items-center justify-center text-[10px] font-bold text-white`}>
+                                                        <div className={`h-6 w-6 rounded-full ${solidAvatarColor(f.assignedTo.initials)} flex items-center justify-center text-[9px] font-bold text-white`}>
                                                             {f.assignedTo.initials}
                                                         </div>
                                                         <span className="text-foreground">{f.assignedTo.name}</span>
@@ -661,7 +685,7 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                                                 <div className="flex items-center gap-2">
                                                     <div
                                                         title={f.submittedBy}
-                                                        className={`h-7 w-7 rounded-full bg-gradient-to-br ${avatarGradient(submitter.initials)} flex items-center justify-center text-[10px] font-bold text-white shrink-0`}
+                                                        className={`h-6 w-6 rounded-full ${solidAvatarColor(submitter.initials)} flex items-center justify-center text-[9px] font-bold text-white shrink-0`}
                                                     >
                                                         {submitter.initials}
                                                     </div>
