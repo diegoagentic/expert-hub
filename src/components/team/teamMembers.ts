@@ -53,3 +53,22 @@ export function avatarGradient(memberId: string): string {
     for (let i = 0; i < memberId.length; i++) hash = (hash * 31 + memberId.charCodeAt(i)) >>> 0
     return AVATAR_HUES[hash % AVATAR_HUES.length]
 }
+
+// Avatar bg solid · canonical palette across board + modal + picker.
+// Deterministic hash from initials/seed picks one of 8 curated tones · each
+// user keeps a consistent color across the app.
+const SOLID_AVATAR_PALETTE = [
+    'bg-blue-600',
+    'bg-indigo-600',
+    'bg-violet-600',
+    'bg-sky-600',
+    'bg-cyan-600',
+    'bg-rose-500',
+    'bg-amber-500',
+    'bg-emerald-600',
+]
+export function solidAvatarColor(seed: string): string {
+    let hash = 0
+    for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0
+    return SOLID_AVATAR_PALETTE[Math.abs(hash) % SOLID_AVATAR_PALETTE.length]
+}

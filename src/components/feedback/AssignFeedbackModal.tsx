@@ -1,19 +1,7 @@
 import { Fragment, useState, useMemo } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { Search } from 'lucide-react'
-import { TEAM_MEMBERS, CURRENT_USER_ID, type TeamMember } from '../team/teamMembers'
-
-// Synthetic palette · matches solidAvatarColor in FeedbackBoard so picker
-// avatars stay consistent with the table cells.
-const AVATAR_BG_PALETTE = [
-    'bg-blue-600', 'bg-indigo-600', 'bg-violet-600', 'bg-sky-600',
-    'bg-cyan-600', 'bg-rose-500', 'bg-amber-500', 'bg-emerald-600',
-]
-function solidAvatarColor(seed: string): string {
-    let hash = 0
-    for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0
-    return AVATAR_BG_PALETTE[Math.abs(hash) % AVATAR_BG_PALETTE.length]
-}
+import { TEAM_MEMBERS, CURRENT_USER_ID, solidAvatarColor, type TeamMember } from '../team/teamMembers'
 
 interface AssignFeedbackModalProps {
     isOpen: boolean

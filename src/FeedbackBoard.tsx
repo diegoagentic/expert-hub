@@ -4,7 +4,7 @@ import Navbar from './components/Navbar'
 import Breadcrumbs from './components/Breadcrumbs'
 import FeedbackDetailModal from './components/feedback/FeedbackDetailModal'
 import AssignFeedbackModal from './components/feedback/AssignFeedbackModal'
-import { getTeamMember, type TeamMember } from './components/team/teamMembers'
+import { getTeamMember, solidAvatarColor, type TeamMember } from './components/team/teamMembers'
 
 interface FeedbackBoardProps {
     onLogout: () => void
@@ -383,24 +383,7 @@ function displayNameFromEmail(email: string): { name: string; initials: string }
     return { name: name || email, initials }
 }
 
-// Avatar bg solid · matches prod (no gradient). Deterministic hash from
-// initials picks one of a curated tone palette (blues + secondaries) so
-// each user keeps a consistent color across refreshes.
-const AVATAR_BG_PALETTE = [
-    'bg-blue-600',
-    'bg-indigo-600',
-    'bg-violet-600',
-    'bg-sky-600',
-    'bg-cyan-600',
-    'bg-rose-500',
-    'bg-amber-500',
-    'bg-emerald-600',
-]
-function solidAvatarColor(seed: string): string {
-    let hash = 0
-    for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0
-    return AVATAR_BG_PALETTE[Math.abs(hash) % AVATAR_BG_PALETTE.length]
-}
+// solidAvatarColor() ahora vive en components/team/teamMembers.ts (shared util).
 
 // Relative time · accepts ISO timestamps + friendly "Jun 12, 2026" seeds.
 function formatRelativeTime(input: string): string {
@@ -794,6 +777,7 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                 onMeToo={() => selected && handleMeToo(selected.id)}
                 comments={selected ? comments[selected.id] ?? [] : []}
                 onAddComment={(body, role) => selected && handleAddComment(selected.id, body, role)}
+                onOpenAssign={(id) => setAssignTargetId(id)}
             />
 
             <AssignFeedbackModal
