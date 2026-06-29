@@ -1,4 +1,4 @@
-import { FileText, AlertCircle, CheckCircle2, CheckSquare, Send, Trash2 } from 'lucide-react'
+import { FileText, AlertCircle, CheckCircle2, CheckSquare, Send, Trash2, ArrowLeftRight } from 'lucide-react'
 import { getTeamMember, avatarGradient } from '../team/teamMembers'
 import DocTypeChip from './DocTypeChip'
 
@@ -27,6 +27,9 @@ interface OcrDocCardProps {
     /** FB-06b · multi-select state · si onToggleSelect provisto, checkbox aparece. */
     selected?: boolean
     onToggleSelect?: () => void
+    /** Compare linked documents · solo visible cuando doc está Reviewed
+     *  (post human review · backend ya enlazó los docs). Aplica a PO y ACK. */
+    onCompareLinked?: () => void
 }
 
 // Best-effort relative time. Accepts seed strings ("Today, 2:30 PM",
@@ -48,7 +51,7 @@ function formatRelativeTime(input: string): string {
     return input
 }
 
-export default function OcrDocCard({ doc, onPreview, onMarkCompleted, onPreflightSync, onDeprecate, selected, onToggleSelect }: OcrDocCardProps) {
+export default function OcrDocCard({ doc, onPreview, onMarkCompleted, onPreflightSync, onDeprecate, selected, onToggleSelect, onCompareLinked }: OcrDocCardProps) {
     const assignee = getTeamMember(doc.assigneeId)
     // For non-Reconciled/Completed states the 4 icons default to In-Progress mapping
     // (per Diego decision 2026-06-09 — confirm with prod for other states later).
@@ -107,6 +110,19 @@ export default function OcrDocCard({ doc, onPreview, onMarkCompleted, onPrefligh
                         <span className="font-semibold text-foreground">{doc.lineItems} line items</span>
                     </div>
                 </div>
+
+                {/* Compare linked documents · solo Reviewed (post human review) ·
+                    aplica a Purchase Order y Acknowledgment per stakeholder Reynier. */}
+                {isReconciled && onCompareLinked && (doc.type === 'Purchase Order' || doc.type === 'Acknowledgment') && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onCompareLinked() }}
+                        title="Compare this document against its linked counterpart (PO ↔ ACK)"
+                        className="mb-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary/15 hover:bg-primary/25 border border-primary/30 px-3 py-2 text-xs font-bold text-foreground transition-colors"
+                    >
+                        <ArrowLeftRight className="h-3.5 w-3.5" />
+                        Compare linked documents
+                    </button>
+                )}
 
                 <div className="border-t border-border pt-3 flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">{formatRelativeTime(doc.date)}</span>

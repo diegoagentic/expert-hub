@@ -19,6 +19,7 @@ import { TEAM_MEMBERS, avatarGradient } from './components/team/teamMembers'
 import { openOriginalMockPdf } from './utils/viewOriginalMockPdf'
 import FeedbackComposerModal, { type FeedbackContext, type FeedbackSubmission } from './components/feedback/FeedbackComposerModal'
 import { useTenant } from './TenantContext'
+import ComparisonLauncher from './components/comparison/ComparisonLauncher'
 
 interface OcrDoc {
     id: string
@@ -77,7 +78,7 @@ const COLUMNS = [
     { id: 'capturing', label: 'Needs Attention', icon: ScanEye, color: 'text-ai', bg: 'bg-ai-light dark:bg-ai/10', border: 'border-ai/20' },
     { id: 'inconsistencies', label: 'Awaiting Expert', icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-500/10', border: 'border-amber-500/20' },
     { id: 'in_progress', label: 'In-progress', icon: Loader2, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-500/10', border: 'border-indigo-200 dark:border-indigo-500/20' },
-    { id: 'processed', label: 'Reconciled', icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-500/10', border: 'border-green-500/20' },
+    { id: 'processed', label: 'Reviewed', icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-500/10', border: 'border-green-500/20' },
     { id: 'completed', label: 'Completed', icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-500/10', border: 'border-green-500/20' },
 ]
 
@@ -101,6 +102,7 @@ export default function OCRTracking({ onLogout, onNavigate, onConvertDocument }:
     const [activeTab, setActiveTab] = useState<'all' | 'identified' | 'capturing' | 'inconsistencies' | 'in_progress' | 'processed' | 'completed' | 'deprecated'>('all')
     const [feedbackContext, setFeedbackContext] = useState<FeedbackContext | null>(null)
     const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set())
+    const [compareDoc, setCompareDoc] = useState<OcrDoc | null>(null)
     const { toasts, addToast, dismissToast } = useToast()
     const { selectedTenants } = useTenant()
 
@@ -280,7 +282,7 @@ export default function OCRTracking({ onLogout, onNavigate, onConvertDocument }:
                                         { id: 'capturing', label: 'Needs Attention', count: counts.capturing, hint: 'Fields extracted with low confidence — manual review suggested' },
                                         { id: 'inconsistencies', label: 'Awaiting Expert', count: counts.inconsistencies, hint: 'Inconsistencies detected — needs Expert Hub resolution' },
                                         { id: 'in_progress', label: 'In-progress', count: counts.in_progress, hint: 'An Expert Hub member is actively resolving inconsistencies on these documents' },
-                                        { id: 'processed', label: 'Reconciled', count: counts.processed, hint: 'Reconciled documents ready to create as Orderbahn records' },
+                                        { id: 'processed', label: 'Reviewed', count: counts.processed, hint: 'Reviewed by an expert · linked documents are now matched and ready to create as Orderbahn records' },
                                         { id: 'completed', label: 'Completed', count: counts.completed, hint: 'Documents fully processed and turned into Orderbahn records' },
                                     ].map(tab => (
                                         <button
@@ -440,6 +442,10 @@ export default function OCRTracking({ onLogout, onNavigate, onConvertDocument }:
                                                         onDeprecate={() => openDeprecation(doc)}
                                                         selected={selectedDocIds.has(doc.id)}
                                                         onToggleSelect={() => toggleDocSelect(doc.id)}
+                                                        onCompareLinked={
+                                                            // Solo cuando doc tiene PO + ACK linkeados (post review · backend ya enlazó)
+                                                            doc.poNumber && doc.ackId ? () => setCompareDoc(doc) : undefined
+                                                        }
                                                     />
                                                 ))}
                                                 {docs.length === 0 && (
@@ -498,7 +504,7 @@ export default function OCRTracking({ onLogout, onNavigate, onConvertDocument }:
                                                             isProcessing ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200' :
                                                             'bg-muted text-muted-foreground'
                                                         }`}>
-                                                            {isReconciledLike ? 'Validated' :
+                                                            {isReconciledLike ? 'Reviewed' :
                                                              doc.status === 'in_progress' ? 'In Progress' :
                                                              doc.status === 'inconsistencies' ? 'Awaiting Expert' :
                                                              isProcessing ? 'Processing' : doc.status}
@@ -672,7 +678,20 @@ export default function OCRTracking({ onLogout, onNavigate, onConvertDocument }:
                 }}
             />
 
-            {/* Preflight Sync Modal — opens via airplane icon on Reconciled docs */}
+            {/* PO ↔ ACK Comparison · solo visible cuando un doc Reviewed tiene linked counterpart */}
+            <ComparisonLauncher
+                isOpen={!!compareDoc}
+                onClose={() => setCompareDoc(null)}
+                poNumber={compareDoc?.poNumber ?? ''}
+                ackId={compareDoc?.ackId ?? ''}
+                onDecision={(report, action) => {
+                    const t = action === 'REJECT' ? 'error' : action === 'REQUEST_REVIEW' ? 'info' : 'success'
+                    const verb = action === 'ACCEPT' ? 'accepted' : action === 'REJECT' ? 'rejected' : 'flagged for review'
+                    addToast(t, `${report.po_number} vs ${report.ack_id} ${verb} (simulated)`)
+                }}
+            />
+
+            {/* Preflight Sync Modal — opens via airplane icon on Reviewed docs */}
             <PreflightSyncModal
                 isOpen={!!preflightDoc}
                 onClose={() => setPreflightDoc(null)}
