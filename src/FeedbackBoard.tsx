@@ -674,26 +674,33 @@ export default function FeedbackBoard({ onLogout, onNavigate }: FeedbackBoardPro
                                             onClick={() => { setSelectedId(f.id); markViewed(f.id) }}
                                             className={`border-b border-border last:border-0 hover:bg-muted/40 transition-colors cursor-pointer ${isUnread ? 'bg-blue-500/5' : ''}`}
                                         >
-                                            <td className="px-4 py-3 max-w-md">
-                                                <div className="font-medium text-foreground flex items-start gap-2">
-                                                    <span className="flex-1">{f.description}</span>
-                                                    {duplicateGroups[f.id]?.groupSize > 1 && (
+                                            <td className="px-4 py-3">
+                                                <div className="max-w-[360px]">
+                                                    <div className="flex items-center gap-2">
                                                         <span
-                                                            title={`Reported by ${duplicateGroups[f.id].groupSize} users`}
-                                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap shrink-0"
+                                                            title={f.description}
+                                                            className="font-medium text-foreground truncate min-w-0 flex-1"
                                                         >
-                                                            <AlertTriangle className="h-2.5 w-2.5" />
-                                                            +{duplicateGroups[f.id].groupSize - 1} similar
+                                                            {f.description}
                                                         </span>
-                                                    )}
-                                                </div>
-                                                <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
-                                                    <span>{f.id}</span>
-                                                    {upvotes[f.id] > 0 && (
-                                                        <span className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium">
-                                                            · {upvotes[f.id]} me too
-                                                        </span>
-                                                    )}
+                                                        {duplicateGroups[f.id]?.groupSize > 1 && (
+                                                            <span
+                                                                title={`Reported by ${duplicateGroups[f.id].groupSize} users`}
+                                                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap shrink-0"
+                                                            >
+                                                                <AlertTriangle className="h-2.5 w-2.5" />
+                                                                +{duplicateGroups[f.id].groupSize - 1} similar
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
+                                                        <span>{f.id}</span>
+                                                        {upvotes[f.id] > 0 && (
+                                                            <span className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium">
+                                                                · {upvotes[f.id]} me too
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">{f.category}</td>
