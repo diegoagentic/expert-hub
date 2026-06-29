@@ -13,6 +13,7 @@ import {
     FunnelIcon, ArrowRightIcon, SparklesIcon, CheckBadgeIcon, ArrowDownTrayIcon, ArrowsRightLeftIcon, DocumentMagnifyingGlassIcon,
     ArrowPathIcon, ShieldCheckIcon
 } from '@heroicons/react/24/outline'
+import { FileText } from 'lucide-react'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts'
 
@@ -34,6 +35,29 @@ import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 function cn(...inputs: (string | undefined | null | false)[]) {
     return twMerge(clsx(inputs))
+}
+
+// Best-effort relative time · alineado con OcrDocCard.formatRelativeTime para
+// que las cards de Transactions hablen el mismo lenguaje visual de fechas.
+// Accepts seed strings ("Today", "Yesterday", "N days ago") y date strings.
+function formatRelativeTime(input: string): string {
+    if (!input) return '—'
+    const lower = input.toLowerCase()
+    if (lower.startsWith('today')) return 'today'
+    if (lower.startsWith('yesterday')) return 'yesterday'
+    const daysMatch = lower.match(/^(\d+)\s+days?\s+ago/)
+    if (daysMatch) return `${daysMatch[1]} days ago`
+    const parsed = new Date(input)
+    if (!isNaN(parsed.getTime())) {
+        const days = Math.max(0, Math.floor((Date.now() - parsed.getTime()) / 86_400_000))
+        if (days === 0) return 'today'
+        if (days === 1) return 'yesterday'
+        if (days < 30) return `${days} days ago`
+        const months = Math.floor(days / 30)
+        if (months < 12) return `${months}mo ago`
+        return parsed.toLocaleDateString()
+    }
+    return input
 }
 
 // ═══════════════════════════════════════════════════
@@ -2581,7 +2605,7 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                                                                 </button>
                                                                             )}
                                                                             <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                                                                                <DocumentTextIcon className="h-4 w-4 text-muted-foreground" />
+                                                                                <FileText className="h-4 w-4 text-muted-foreground" />
                                                                             </div>
                                                                             <div className="min-w-0">
                                                                                 <div className="flex items-center gap-2 flex-wrap">
@@ -2589,31 +2613,10 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                                                                         {lifecycleTab === 'acknowledgments' ? (order as any).vendor : (order as any).customer}
                                                                                     </span>
                                                                                     <DocTypeChip type={lifecycleTab === 'acknowledgments' ? 'Acknowledgment' : lifecycleTab === 'quotes' ? 'Quote' : 'Purchase Order'} size="sm" />
-                                                                                    {order.id === '#ORD-7829' && (
-                                                                                        <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 text-[10px] font-bold uppercase tracking-wider">
-                                                                                            New
-                                                                                        </span>
-                                                                                    )}
-                                                                                    {/* Step 1.3: Validated badges on ACK cards */}
-                                                                                    {isContinua && lifecycleTab === 'acknowledgments' && (ackPhase === 'validating' || ackPhase === 'alert') && (
-                                                                                        <>
-                                                                                            {order.id === 'Acknowledgement-8839' && ackValidatedCount >= 1 && (
-                                                                                                <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in duration-300">
-                                                                                                    Validated ✓
-                                                                                                </span>
-                                                                                            )}
-                                                                                            {order.id === 'Acknowledgement-8840' && ackValidatedCount >= 2 && (
-                                                                                                <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in duration-300">
-                                                                                                    Validated ✓
-                                                                                                </span>
-                                                                                            )}
-                                                                                            {order.id === 'Acknowledgement-8841' && ackKnollAlert && (
-                                                                                                <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 text-[10px] font-bold uppercase tracking-wider animate-in fade-in duration-300">
-                                                                                                    Dispute ⚠
-                                                                                                </span>
-                                                                                            )}
-                                                                                        </>
-                                                                                    )}
+                                                                                    {/* Badges legacy removidos · "NEW" / "Validated ✓" / "Dispute ⚠"
+                                                                                        eran del lifecycle ACK anterior · ya no aplican con los estados
+                                                                                        nuevos (Received/Pending Review/Discrepancy/Approved).
+                                                                                        El status pill del footer es la fuente de verdad. */}
                                                                                 </div>
                                                                                 <div className="flex items-center gap-1 mt-0.5">
                                                                                     <span className="text-[11px] text-muted-foreground font-mono truncate">{order.id}</span>
@@ -2685,7 +2688,7 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
 
                                                                         {/* Footer — date left, status + actions right (homologated with OcrDocCard) */}
                                                                         <div className="border-t border-border pt-3 mt-1 flex items-center justify-between">
-                                                                            <span className="text-xs text-muted-foreground">{order.date}</span>
+                                                                            <span className="text-xs text-muted-foreground">{formatRelativeTime(order.date)}</span>
 
                                                                             <div className="flex items-center gap-1.5">
                                                                                 {/* Status Badge */}
@@ -2701,7 +2704,7 @@ export default function Transactions({ onLogout, onNavigateToWorkspace, onNaviga
                                                                                     className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                                                                                     title="Preview Document"
                                                                                 >
-                                                                                    <DocumentTextIcon className="h-4 w-4" />
+                                                                                    <FileText className="h-4 w-4" />
                                                                                 </button>
                                                                                 {/* Details button removido · row click sigue abriendo el accordion */}
                                                                             </div>
